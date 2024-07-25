@@ -3,8 +3,7 @@ package servicerunner
 import (
 	"fmt"
 	"strings"
-
-	pb_systemmanager_messages "github.com/VU-ASE/pkg-CommunicationDefinitions/v2/packages/go/systemmanager"
+	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
 	"github.com/rs/zerolog/log"
 )
 
@@ -81,17 +80,17 @@ type SystemManagerInfo struct {
 }
 
 // Utility function to get a list of all services running on the system manager
-func (sysman SystemManagerInfo) GetAllServices() (*pb_systemmanager_messages.ServiceList, error) {
+func (sysman SystemManagerInfo) GetAllServices() (*pb_core_messages.ServiceList, error) {
 	return getServiceList(sysman.RepReqAddress)
 }
 
 // Utility function to get the latest tuning state from the system manager
-func (sysman SystemManagerInfo) GetTuningState() (*pb_systemmanager_messages.TuningState, error) {
+func (sysman SystemManagerInfo) GetTuningState() (*pb_core_messages.TuningState, error) {
 	return getTuningState(sysman.RepReqAddress)
 }
 
 // Utility function to easily read values from the tuning state
-func GetTuningInt(key string, tuningState *pb_systemmanager_messages.TuningState) (int, error) {
+func GetTuningInt(key string, tuningState *pb_core_messages.TuningState) (int, error) {
 	if tuningState == nil {
 		return 0, fmt.Errorf("Tuning state is nil")
 	}
@@ -108,7 +107,7 @@ func GetTuningInt(key string, tuningState *pb_systemmanager_messages.TuningState
 }
 
 // Utility function to easily read values from the tuning state
-func GetTuningString(key string, tuningState *pb_systemmanager_messages.TuningState) (string, error) {
+func GetTuningString(key string, tuningState *pb_core_messages.TuningState) (string, error) {
 	if tuningState == nil {
 		return "", fmt.Errorf("Tuning state is nil")
 	}
@@ -125,7 +124,7 @@ func GetTuningString(key string, tuningState *pb_systemmanager_messages.TuningSt
 }
 
 // Utility function to easily read values from the tuning state
-func GetTuningFloat(key string, tuningState *pb_systemmanager_messages.TuningState) (float32, error) {
+func GetTuningFloat(key string, tuningState *pb_core_messages.TuningState) (float32, error) {
 	if tuningState == nil {
 		return 0, fmt.Errorf("Tuning state is nil")
 	}

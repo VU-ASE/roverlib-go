@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	pb_systemmanager_messages "github.com/VU-ASE/pkg-CommunicationDefinitions/v2/packages/go/systemmanager"
+	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -39,7 +39,7 @@ func listenForTuningBroadcasts(onTuningState TuningStateCallbackFunction, sysman
 
 		// NOTE: this is a best effor, we discard the message (and any errors) if we cannot parse it
 		// Parse the tuning state
-		parsedMsg := pb_systemmanager_messages.SystemManagerMessage{}
+		parsedMsg := pb_core_messages.CoreMessage{}
 		err = proto.Unmarshal(msg, &parsedMsg)
 		if err != nil {
 			continue
@@ -58,8 +58,8 @@ func listenForTuningBroadcasts(onTuningState TuningStateCallbackFunction, sysman
 }
 
 // This will combine the current state with the new state, and return the combined state
-// note: it will edit the new state in place
-func createUpdatedTuningState(currentTuning *pb_systemmanager_messages.TuningState, receivedTuning *pb_systemmanager_messages.TuningState, serviceOptions []option) *pb_systemmanager_messages.TuningState {
+// note: it will edit the new state in placepb_core_messages
+func createUpdatedTuningState(currentTuning *pb_core_messages.TuningState, receivedTuning *pb_core_messages.TuningState, serviceOptions []option) *pb_core_messages.TuningState {
 	if currentTuning == nil || receivedTuning == nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func createUpdatedTuningState(currentTuning *pb_systemmanager_messages.TuningSta
 	if newTuningStateParams == nil {
 		return nil
 	}
-	newTuningStateParams = slices.DeleteFunc(newTuningStateParams, func(tuningParam *pb_systemmanager_messages.TuningState_Parameter) bool {
+	newTuningStateParams = slices.DeleteFunc(newTuningStateParams, func(tuningParam *pb_core_messages.TuningState_Parameter) bool {
 		// Does a parameter with the same key and type exist in the service options?
 		for _, opt := range serviceOptions {
 			// Does this parameter exist in the service options?
@@ -84,7 +84,7 @@ func createUpdatedTuningState(currentTuning *pb_systemmanager_messages.TuningSta
 	receivedTuning.DynamicParameters = newTuningStateParams
 	merged := mergeTuningStates(currentTuning, receivedTuning)
 	// Delete all parameters that are not present in the service options
-	merged.DynamicParameters = slices.DeleteFunc(merged.DynamicParameters, func(tuningParam *pb_systemmanager_messages.TuningState_Parameter) bool {
+	merged.DynamicParameters = slices.DeleteFunc(merged.DynamicParameters, func(tuningParam *pb_core_messages.TuningState_Parameter) bool {
 		for _, opt := range serviceOptions {
 			if tuningParameterMatchesOption(tuningParam, opt) {
 				return false
@@ -98,7 +98,7 @@ func createUpdatedTuningState(currentTuning *pb_systemmanager_messages.TuningSta
 
 // This utility function will check if the type and name of a tuning parameter matches a given option as defined in the service.yaml file
 // This is used to filter out parameters that are not being used by the service during runtime
-func tuningParameterMatchesOption(tuningParam *pb_systemmanager_messages.TuningState_Parameter, opt option) bool {
+func tuningParameterMatchesOption(tuningParam *pb_core_messages.TuningState_Parameter, opt option) bool {
 	if tuningParam == nil {
 		return false
 	}
@@ -108,7 +108,7 @@ func tuningParameterMatchesOption(tuningParam *pb_systemmanager_messages.TuningS
 	return key == opt.Name && keyType == opt.Type
 }
 
-func requestTuningState(sysmanReqRepAddr string) (*pb_systemmanager_messages.TuningState, error) {
+func requestTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState, error) {
 	// create a zmq client socket to the system manager
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
@@ -122,9 +122,9 @@ func requestTuningState(sysmanReqRepAddr string) (*pb_systemmanager_messages.Tun
 	}
 
 	// create a request message
-	reqMsg := pb_systemmanager_messages.SystemManagerMessage{
-		Msg: &pb_systemmanager_messages.SystemManagerMessage_TuningStateRequest{
-			TuningStateRequest: &pb_systemmanager_messages.TuningStateRequest{},
+	reqMsg := pb_core_messages.CoreMessage{
+		Msg: &pb_core_messages.CoreMessage_TuningStateRequest{
+			TuningStateRequest: &pb_core_messages.TuningStateRequest{},
 		},
 	}
 
@@ -169,7 +169,7 @@ func requestTuningState(sysmanReqRepAddr string) (*pb_systemmanager_messages.Tun
 	if err != nil {
 		return nil, err
 	}
-	response := pb_systemmanager_messages.SystemManagerMessage{}
+	response := pb_core_messages.CoreMessage{}
 	err = proto.Unmarshal(resBytes, &response)
 	if err != nil {
 		log.Err(err).Msg("Error unmarshalling tuning state protobuf message")
@@ -184,18 +184,18 @@ func requestTuningState(sysmanReqRepAddr string) (*pb_systemmanager_messages.Tun
 }
 
 // Used to convert the options present in the service.yaml file to a tuning state
-func convertOptionsToTuningState(options []option) (*pb_systemmanager_messages.TuningState, error) {
-	tuningState := pb_systemmanager_messages.TuningState{
+func convertOptionsToTuningState(options []option) (*pb_core_messages.TuningState, error) {
+	tuningState := pb_core_messages.TuningState{
 		Timestamp:         uint64(time.Now().Unix()),
-		DynamicParameters: make([]*pb_systemmanager_messages.TuningState_Parameter, 0),
+		DynamicParameters: make([]*pb_core_messages.TuningState_Parameter, 0),
 	}
 	for _, opt := range options {
 		if opt.DefaultValue != "" {
-			newParam := pb_systemmanager_messages.TuningState_Parameter{}
+			newParam := pb_core_messages.TuningState_Parameter{}
 			switch opt.Type {
 			case "string":
-				newParam.Parameter = &pb_systemmanager_messages.TuningState_Parameter_String_{
-					String_: &pb_systemmanager_messages.TuningState_Parameter_StringParameter{
+				newParam.Parameter = &pb_core_messages.TuningState_Parameter_String_{
+					String_: &pb_core_messages.TuningState_Parameter_StringParameter{
 						Key:   opt.Name,
 						Value: opt.DefaultValue,
 					},
@@ -205,8 +205,8 @@ func convertOptionsToTuningState(options []option) (*pb_systemmanager_messages.T
 				if err != nil {
 					return nil, fmt.Errorf("Error converting default value of option '%s' to int: %s", opt.Name, err)
 				}
-				newParam.Parameter = &pb_systemmanager_messages.TuningState_Parameter_Int{
-					Int: &pb_systemmanager_messages.TuningState_Parameter_IntParameter{
+				newParam.Parameter = &pb_core_messages.TuningState_Parameter_Int{
+					Int: &pb_core_messages.TuningState_Parameter_IntParameter{
 						Key:   opt.Name,
 						Value: int64(intval),
 					},
@@ -216,8 +216,8 @@ func convertOptionsToTuningState(options []option) (*pb_systemmanager_messages.T
 				if err != nil {
 					return nil, fmt.Errorf("Error converting default value of option '%s' to float: %s", opt.Name, err)
 				}
-				newParam.Parameter = &pb_systemmanager_messages.TuningState_Parameter_Float{
-					Float: &pb_systemmanager_messages.TuningState_Parameter_FloatParameter{
+				newParam.Parameter = &pb_core_messages.TuningState_Parameter_Float{
+					Float: &pb_core_messages.TuningState_Parameter_FloatParameter{
 						Key:   opt.Name,
 						Value: float32(floatval),
 					},
@@ -234,7 +234,7 @@ func convertOptionsToTuningState(options []option) (*pb_systemmanager_messages.T
 	return &tuningState, nil
 }
 
-func getUnsetOptions(tuningState *pb_systemmanager_messages.TuningState, options []option) []option {
+func getUnsetOptions(tuningState *pb_core_messages.TuningState, options []option) []option {
 	unsetOptions := make([]option, 0)
 	for _, opt := range options {
 		var err error = nil
@@ -257,7 +257,7 @@ func getUnsetOptions(tuningState *pb_systemmanager_messages.TuningState, options
 }
 
 // Parses a parameter from the tuning state and returns the key
-func getKeyAndType(param *pb_systemmanager_messages.TuningState_Parameter) (string, string) {
+func getKeyAndType(param *pb_core_messages.TuningState_Parameter) (string, string) {
 	if param.GetString_() != nil {
 		return param.GetString_().Key, "string"
 	} else if param.GetInt() != nil {
@@ -269,7 +269,7 @@ func getKeyAndType(param *pb_systemmanager_messages.TuningState_Parameter) (stri
 }
 
 // Check if a key with specific type exists in the tuning state
-func keyExists(key string, keyType string, tuningState *pb_systemmanager_messages.TuningState) bool {
+func keyExists(key string, keyType string, tuningState *pb_core_messages.TuningState) bool {
 	if tuningState == nil {
 		return false
 	}
@@ -289,16 +289,16 @@ func keyExists(key string, keyType string, tuningState *pb_systemmanager_message
 	return false
 }
 
-func mergeTuningStates(old *pb_systemmanager_messages.TuningState, new *pb_systemmanager_messages.TuningState) *pb_systemmanager_messages.TuningState {
+func mergeTuningStates(old *pb_core_messages.TuningState, new *pb_core_messages.TuningState) *pb_core_messages.TuningState {
 	if old == nil {
 		return new
 	}
 	if new == nil {
 		return old
 	}
-	merged := pb_systemmanager_messages.TuningState{
+	merged := pb_core_messages.TuningState{
 		Timestamp:         new.Timestamp,
-		DynamicParameters: make([]*pb_systemmanager_messages.TuningState_Parameter, 0),
+		DynamicParameters: make([]*pb_core_messages.TuningState_Parameter, 0),
 	}
 	// Tuning states can be partial. This will make sure that all the old parameters are added to the merged tuning state,
 	// even if they are not present in the received new tuning state

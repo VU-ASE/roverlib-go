@@ -3,7 +3,7 @@ package servicerunner
 import (
 	"testing"
 
-	pb_systemmanager_messages "github.com/VU-ASE/pkg-CommunicationDefinitions/v2/packages/go/systemmanager"
+	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
 	"github.com/rs/zerolog/log"
 )
 
@@ -41,27 +41,27 @@ func TestBasicTuningUpdate(t *testing.T) {
 	}
 
 	// Create an updated tuning state (as would be received over the air)
-	receivedTuning := &pb_systemmanager_messages.TuningState{
-		DynamicParameters: []*pb_systemmanager_messages.TuningState_Parameter{
+	receivedTuning := &pb_core_messages.TuningState{
+		DynamicParameters: []*pb_core_messages.TuningState_Parameter{
 			{
-				Parameter: &pb_systemmanager_messages.TuningState_Parameter_Int{
-					Int: &pb_systemmanager_messages.TuningState_Parameter_IntParameter{
+				Parameter: &pb_core_messages.TuningState_Parameter_Int{
+					Int: &pb_core_messages.TuningState_Parameter_IntParameter{
 						Key:   "param1",
 						Value: 10,
 					},
 				},
 			},
 			{
-				Parameter: &pb_systemmanager_messages.TuningState_Parameter_String_{
-					String_: &pb_systemmanager_messages.TuningState_Parameter_StringParameter{
+				Parameter: &pb_core_messages.TuningState_Parameter_String_{
+					String_: &pb_core_messages.TuningState_Parameter_StringParameter{
 						Key:   "param2",
 						Value: "abc",
 					},
 				},
 			},
 			{
-				Parameter: &pb_systemmanager_messages.TuningState_Parameter_String_{
-					String_: &pb_systemmanager_messages.TuningState_Parameter_StringParameter{
+				Parameter: &pb_core_messages.TuningState_Parameter_String_{
+					String_: &pb_core_messages.TuningState_Parameter_StringParameter{
 						Key:   "param3",
 						Value: "you should not see this",
 					},
@@ -90,11 +90,11 @@ func TestBasicTuningUpdate(t *testing.T) {
 	// Expect that param1 is updated to 10, and param2 is updated to "abc"
 	for _, param := range newTuning.DynamicParameters {
 		switch param.Parameter.(type) {
-		case *pb_systemmanager_messages.TuningState_Parameter_Int:
+		case *pb_core_messages.TuningState_Parameter_Int:
 			if param.GetInt().Value != 10 {
 				t.Errorf("Expected param1 to be 10, got %d", param.GetInt().Value)
 			}
-		case *pb_systemmanager_messages.TuningState_Parameter_String_:
+		case *pb_core_messages.TuningState_Parameter_String_:
 			if param.GetString_().Value != "teststr" {
 				t.Errorf("Expected param2 to be 'teststr', got %s", param.GetString_().Value)
 			}

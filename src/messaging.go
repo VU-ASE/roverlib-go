@@ -3,7 +3,7 @@ package servicerunner
 import (
 	"fmt"
 
-	pb_systemmanager_messages "github.com/VU-ASE/pkg-CommunicationDefinitions/v2/packages/go/systemmanager"
+	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -13,7 +13,7 @@ import (
 // Exposed package functions to send and receive messages to and from the system manager
 //
 
-func SendRequestToSystemManager(message *pb_systemmanager_messages.SystemManagerMessage) (*pb_systemmanager_messages.SystemManagerMessage, error) {
+func SendRequestToSystemManager(message *pb_core_messages.CoreMessage) (*pb_core_messages.CoreMessage, error) {
 	// Get the address to send to
 	addr, err := getSystemManagerRepReqAddress()
 	if err != nil {
@@ -51,7 +51,7 @@ func SendRequestToSystemManager(message *pb_systemmanager_messages.SystemManager
 	}
 
 	// parse the response
-	parsedMsg := pb_systemmanager_messages.SystemManagerMessage{}
+	parsedMsg := pb_core_messages.CoreMessage{}
 	err = proto.Unmarshal(msg, &parsedMsg)
 	if err != nil {
 		return nil, err

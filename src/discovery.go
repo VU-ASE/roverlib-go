@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	pb_systemmanager_messages "github.com/VU-ASE/pkg-CommunicationDefinitions/v2/packages/go/systemmanager"
+	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
 	customerrors "github.com/VU-ASE/roverlib/src/errors"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/rs/zerolog/log"
@@ -52,28 +52,28 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	}
 
 	// convert our service definition to a protobuf message
-	endpoints := []*pb_systemmanager_messages.ServiceEndpoint{}
+	endpoints := []*pb_core_messages.ServiceEndpoint{}
 	for _, output := range service.Outputs {
 		// convert our struct to the ServiceEndpoint protobuf message
-		endpoints = append(endpoints, &pb_systemmanager_messages.ServiceEndpoint{
+		endpoints = append(endpoints, &pb_core_messages.ServiceEndpoint{
 			Name:    output.Name,
 			Address: output.Address,
 		})
 	}
-	options := []*pb_systemmanager_messages.ServiceOption{}
+	options := []*pb_core_messages.ServiceOption{}
 	for _, option := range service.Options {
 		// convert our struct to the ServiceOption protobuf message
-		newOption := &pb_systemmanager_messages.ServiceOption{
+		newOption := &pb_core_messages.ServiceOption{
 			Name:    option.Name,
 			Mutable: option.Mutable,
 		}
 		if option.DefaultValue != "" {
 			switch option.Type {
 			case "string":
-				newOption.Type = pb_systemmanager_messages.ServiceOption_STRING
+				newOption.Type = pb_core_messages.ServiceOption_STRING
 				newOption.StringDefault = option.DefaultValue
 			case "int":
-				newOption.Type = pb_systemmanager_messages.ServiceOption_INT
+				newOption.Type = pb_core_messages.ServiceOption_INT
 				intval, err := strconv.Atoi(option.DefaultValue)
 				if err != nil {
 					return nil, fmt.Errorf("Option '%s' has type int, but a default value that is not an int: %s", option.Name, option.DefaultValue)
@@ -81,7 +81,7 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 					newOption.IntDefault = int32(intval)
 				}
 			case "float":
-				newOption.Type = pb_systemmanager_messages.ServiceOption_FLOAT
+				newOption.Type = pb_core_messages.ServiceOption_FLOAT
 				floatval, err := strconv.ParseFloat(option.DefaultValue, 64)
 				if err != nil {
 					return nil, fmt.Errorf("Option '%s' has type float, but a default value that is not a float: %s", option.Name, option.DefaultValue)
@@ -94,19 +94,19 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 		}
 		options = append(options, newOption)
 	}
-	dependencies := []*pb_systemmanager_messages.ServiceDependency{}
+	dependencies := []*pb_core_messages.ServiceDependency{}
 	for _, dependency := range service.Dependencies {
 		// convert our struct to the ServiceDependency protobuf message
-		dependencies = append(dependencies, &pb_systemmanager_messages.ServiceDependency{
+		dependencies = append(dependencies, &pb_core_messages.ServiceDependency{
 			ServiceName: dependency.ServiceName,
 			OutputName:  dependency.OutputName,
 		})
 	}
 	// create a registration message
-	regMsg := pb_systemmanager_messages.SystemManagerMessage{
-		Msg: &pb_systemmanager_messages.SystemManagerMessage_Service{
-			Service: &pb_systemmanager_messages.Service{
-				Identifier: &pb_systemmanager_messages.ServiceIdentifier{
+	regMsg := pb_core_messages.CoreMessage{
+		Msg: &pb_core_messages.CoreMessage_Service{
+			Service: &pb_core_messages.Service{
+				Identifier: &pb_core_messages.ServiceIdentifier{
 					Name: service.Name,
 					Pid:  int32(os.Getpid()),
 				},
@@ -158,7 +158,7 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	if err != nil {
 		return nil, err
 	}
-	response := pb_systemmanager_messages.SystemManagerMessage{}
+	response := pb_core_messages.CoreMessage{}
 	err = proto.Unmarshal(resBytes, &response)
 	if err != nil {
 		log.Err(err).Msg("Error unmarshalling protobuf message")
@@ -273,12 +273,12 @@ func extractUniqueServices(dependencies []dependency, resolvedDependencies []Res
 	return uniqueServices
 }
 
-func requestServiceInformation(serviceName string, serverSocket *zmq.Socket) (*pb_systemmanager_messages.Service, error) {
+func requestServiceInformation(serviceName string, serverSocket *zmq.Socket) (*pb_core_messages.Service, error) {
 	// create a request message
-	reqMsg := pb_systemmanager_messages.SystemManagerMessage{
-		Msg: &pb_systemmanager_messages.SystemManagerMessage_ServiceInformationRequest{
-			ServiceInformationRequest: &pb_systemmanager_messages.ServiceInformationRequest{
-				Requested: &pb_systemmanager_messages.ServiceIdentifier{
+	reqMsg := pb_core_messages.CoreMessage{
+		Msg: &pb_core_messages.CoreMessage_ServiceInformationRequest{
+			ServiceInformationRequest: &pb_core_messages.ServiceInformationRequest{
+				Requested: &pb_core_messages.ServiceIdentifier{
 					Name: serviceName,
 					Pid:  1, // does not matter
 				},
@@ -325,7 +325,7 @@ func requestServiceInformation(serviceName string, serverSocket *zmq.Socket) (*p
 
 	// parse the response
 	// the response must be of type Service (see messages/servicediscovery.proto)
-	response := pb_systemmanager_messages.SystemManagerMessage{}
+	response := pb_core_messages.CoreMessage{}
 	err = proto.Unmarshal(resBytes, &response)
 	respondedService := response.GetService()
 	if respondedService == nil {
@@ -333,7 +333,7 @@ func requestServiceInformation(serviceName string, serverSocket *zmq.Socket) (*p
 	}
 	if err != nil {
 		return nil, err
-	} else if respondedService.Status != pb_systemmanager_messages.ServiceStatus_RUNNING {
+	} else if respondedService.Status != pb_core_messages.ServiceStatus_RUNNING {
 		// pass a detectable error, so that the caller can retry later
 		return nil, customerrors.ServiceNotRunning
 	}
@@ -358,7 +358,7 @@ func isDependencyOfService(dependency dependency, serviceName string) bool {
 }
 
 // Returns a resolved dependency, given a service status and a dependency
-func getDependencyFromServiceInformation(service *pb_systemmanager_messages.Service, dependency dependency) (ResolvedDependency, error) {
+func getDependencyFromServiceInformation(service *pb_core_messages.Service, dependency dependency) (ResolvedDependency, error) {
 	if service == nil {
 		return ResolvedDependency{}, fmt.Errorf("Received empty service status")
 	}
@@ -383,7 +383,7 @@ func getDependencyFromServiceInformation(service *pb_systemmanager_messages.Serv
 }
 
 // Get a list of all services
-func getServiceList(sysmanReqRepAddr string) (*pb_systemmanager_messages.ServiceList, error) {
+func getServiceList(sysmanReqRepAddr string) (*pb_core_messages.ServiceList, error) {
 	// Create a zmq client socket to the system manager
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
@@ -397,9 +397,9 @@ func getServiceList(sysmanReqRepAddr string) (*pb_systemmanager_messages.Service
 	}
 
 	// Create a request message
-	reqMsg := pb_systemmanager_messages.SystemManagerMessage{
-		Msg: &pb_systemmanager_messages.SystemManagerMessage_ServiceListRequest{
-			ServiceListRequest: &pb_systemmanager_messages.ServiceListRequest{},
+	reqMsg := pb_core_messages.CoreMessage{
+		Msg: &pb_core_messages.CoreMessage_ServiceListRequest{
+			ServiceListRequest: &pb_core_messages.ServiceListRequest{},
 		},
 	}
 	// Marshal message
@@ -418,7 +418,7 @@ func getServiceList(sysmanReqRepAddr string) (*pb_systemmanager_messages.Service
 		return nil, err
 	}
 	// Parse the response
-	response := pb_systemmanager_messages.SystemManagerMessage{}
+	response := pb_core_messages.CoreMessage{}
 	err = proto.Unmarshal(resBytes, &response)
 	if err != nil {
 		return nil, err
@@ -432,7 +432,7 @@ func getServiceList(sysmanReqRepAddr string) (*pb_systemmanager_messages.Service
 }
 
 // Get the tuning state
-func getTuningState(sysmanReqRepAddr string) (*pb_systemmanager_messages.TuningState, error) {
+func getTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState, error) {
 	// Create a zmq client socket to the system manager
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
@@ -446,9 +446,9 @@ func getTuningState(sysmanReqRepAddr string) (*pb_systemmanager_messages.TuningS
 	}
 
 	// Create a request message
-	reqMsg := pb_systemmanager_messages.SystemManagerMessage{
-		Msg: &pb_systemmanager_messages.SystemManagerMessage_TuningStateRequest{
-			TuningStateRequest: &pb_systemmanager_messages.TuningStateRequest{},
+	reqMsg := pb_core_messages.CoreMessage{
+		Msg: &pb_core_messages.CoreMessage_TuningStateRequest{
+			TuningStateRequest: &pb_core_messages.TuningStateRequest{},
 		},
 	}
 	// Marshal message
@@ -467,7 +467,7 @@ func getTuningState(sysmanReqRepAddr string) (*pb_systemmanager_messages.TuningS
 		return nil, err
 	}
 	// Parse the response
-	response := pb_systemmanager_messages.SystemManagerMessage{}
+	response := pb_core_messages.CoreMessage{}
 	err = proto.Unmarshal(resBytes, &response)
 	if err != nil {
 		return nil, err
@@ -483,8 +483,8 @@ func getTuningState(sysmanReqRepAddr string) (*pb_systemmanager_messages.TuningS
 // Used to update your own service status
 func updateServiceStatus(
 	sysmanReqRepAddr string,
-	identifier *pb_systemmanager_messages.ServiceIdentifier,
-	status pb_systemmanager_messages.ServiceStatus,
+	identifier *pb_core_messages.ServiceIdentifier,
+	status pb_core_messages.ServiceStatus,
 ) error {
 	// create a zmq client socket to the system manager
 	socket, err := zmq.NewSocket(zmq.REQ)
@@ -498,9 +498,9 @@ func updateServiceStatus(
 	}
 
 	// Create a request message
-	msg := pb_systemmanager_messages.SystemManagerMessage{
-		Msg: &pb_systemmanager_messages.SystemManagerMessage_ServiceStatusUpdate{
-			ServiceStatusUpdate: &pb_systemmanager_messages.ServiceStatusUpdate{
+	msg := pb_core_messages.CoreMessage{
+		Msg: &pb_core_messages.CoreMessage_ServiceStatusUpdate{
+			ServiceStatusUpdate: &pb_core_messages.ServiceStatusUpdate{
 				Status:  status,
 				Service: identifier,
 			},

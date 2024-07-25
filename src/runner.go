@@ -12,7 +12,7 @@ import (
 
 	build_debug "runtime/debug"
 
-	pb_systemmanager_messages "github.com/VU-ASE/pkg-CommunicationDefinitions/v2/packages/go/systemmanager"
+	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -20,10 +20,10 @@ import (
 const SERVER_ADDR = "tcp://localhost:1337"
 
 // The function that is called when a new tuning state is recevied
-type TuningStateCallbackFunction func(tuningState *pb_systemmanager_messages.TuningState)
+type TuningStateCallbackFunction func(tuningState *pb_core_messages.TuningState)
 
 // The main function to run
-type MainFunction func(serviceInformation ResolvedService, sysmanInformation SystemManagerInfo, initialTuningState *pb_systemmanager_messages.TuningState) error
+type MainFunction func(serviceInformation ResolvedService, sysmanInformation SystemManagerInfo, initialTuningState *pb_core_messages.TuningState) error
 
 // The function to call when the service is terminated or interrupted
 type TerminationFunction func(signal os.Signal)
@@ -212,7 +212,7 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 	}
 
 	// Identifier object to use for coming requests
-	identifier := pb_systemmanager_messages.ServiceIdentifier{
+	identifier := pb_core_messages.ServiceIdentifier{
 		Name: service.Name,
 		Pid:  int32(os.Getpid()),
 	}
@@ -223,7 +223,7 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 			_ = updateServiceStatus(
 				sysmanInfo.RepReqAddress,
 				&identifier,
-				pb_systemmanager_messages.ServiceStatus_RUNNING)
+				pb_core_messages.ServiceStatus_RUNNING)
 		}()
 	}
 	err = main(serviceInformation, sysmanInfo, initialTuning)
@@ -232,7 +232,7 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 			_ = updateServiceStatus(
 				sysmanInfo.RepReqAddress,
 				&identifier,
-				pb_systemmanager_messages.ServiceStatus_STOPPED)
+				pb_core_messages.ServiceStatus_STOPPED)
 		}()
 	}
 

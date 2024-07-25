@@ -3,11 +3,11 @@ module github.com/VU-ASE/roverlib
 go 1.21.6
 
 require (
-	github.com/VU-ASE/pkg-CommunicationDefinitions/v2 v2.9.0
+	github.com/VU-ASE/rovercom v1.0.2
 	github.com/go-yaml/yaml v2.1.0+incompatible
-	github.com/pebbe/zmq4 v1.2.10
-	github.com/rs/zerolog v1.31.0
-	google.golang.org/protobuf v1.32.0
+	github.com/pebbe/zmq4 v1.2.11
+	github.com/rs/zerolog v1.33.0
+	google.golang.org/protobuf v1.34.2
 )
 
 require (

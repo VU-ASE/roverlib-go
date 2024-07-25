@@ -1,0 +1,13 @@
+# Service definitions
+#! the name is missing
+description: This is my first service
+
+# Define dependencies
+dependencies:
+  - service: controller
+    output: actuators
+
+# Define outputs (a )
+outputs:
+  - name: actuators
+    address: tcp://*:5555

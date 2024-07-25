@@ -1,0 +1,18 @@
+# Service definitions
+name: mytest
+description: This is my first service
+
+# Define dependencies
+dependencies:
+  - service: controller
+    output: actuators
+
+# Define outputs
+#! address tcp://*:5555 is defined twice
+outputs:
+  - name: one
+    address: tcp://*:5555
+  - name: two
+    address: tcp://*:5556
+  - name: three
+    address: tcp://*:5555

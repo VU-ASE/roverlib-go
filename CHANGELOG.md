@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/VU-ASE/roverlib/compare/v1.0.2...v1.0.3) (2024-07-29)
+
+
+### Bug Fixes
+
+* change back to CoreInfo ([de53fc2](https://github.com/VU-ASE/roverlib/commit/de53fc2b53db3ecbca577b062b13db4120e7ce0c))
+
 ## [1.0.2](https://github.com/VU-ASE/roverlib/compare/v1.0.1...v1.0.2) (2024-07-29)
 
 

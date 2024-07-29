@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/VU-ASE/roverlib/compare/v1.0.1...v1.0.2) (2024-07-29)
+
+
+### Bug Fixes
+
+* error emssages and systemmanagerInfo struct rename ([d916dce](https://github.com/VU-ASE/roverlib/commit/d916dce4fc6ab72c15131bbc2aca23d2b9820f9c))
+* some lingering sysman names changed to core ([c1de31b](https://github.com/VU-ASE/roverlib/commit/c1de31b5fac942ad43259633b4f8ccbab54415ca))
+
 ## [1.0.1](https://github.com/VU-ASE/roverlib/compare/v1.0.0...v1.0.1) (2024-07-25)
 
 

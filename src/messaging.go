@@ -10,25 +10,25 @@ import (
 )
 
 //
-// Exposed package functions to send and receive messages to and from the system manager
+// Exposed package functions to send and receive messages to and from the core
 //
 
-func SendRequestToSystemManager(message *pb_core_messages.CoreMessage) (*pb_core_messages.CoreMessage, error) {
+func SendRequestToCore(message *pb_core_messages.CoreMessage) (*pb_core_messages.CoreMessage, error) {
 	// Get the address to send to
-	addr, err := getSystemManagerRepReqAddress()
+	addr, err := getCoreRepReqAddress()
 	if err != nil {
 		return nil, err
 	}
 
-	// create a zmq client socket to the system manager
+	// create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to system manager: %s", err)
+		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
 	err = client.Connect(addr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to system manager: %s", err)
+		return nil, fmt.Errorf("Could not connect to core: %s", err)
 	}
 
 	// convert the message to bytes
@@ -38,7 +38,7 @@ func SendRequestToSystemManager(message *pb_core_messages.CoreMessage) (*pb_core
 		return nil, err
 	}
 
-	// send registration to the system manager
+	// send registration to the core
 	_, err = client.SendBytes(msgBytes, 0)
 	if err != nil {
 		return nil, err

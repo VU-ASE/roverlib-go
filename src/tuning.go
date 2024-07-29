@@ -12,9 +12,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// Listens on the broadcast channel for broadcasts from the system manager
+// Listens on the broadcast channel for broadcasts from the core
 func listenForTuningBroadcasts(onTuningState TuningStateCallbackFunction, sysmanBroadcastAddr string) error {
-	// Subscribe to the system manager
+	// Subscribe to the core
 	broadcast, err := zmq.NewSocket(zmq.SUB)
 	if err != nil {
 		return err
@@ -47,12 +47,12 @@ func listenForTuningBroadcasts(onTuningState TuningStateCallbackFunction, sysman
 
 		newTuningState := parsedMsg.GetTuningState()
 		if newTuningState == nil {
-			log.Warn().Msg("Received empty tuning state broadcast from system manager")
+			log.Warn().Msg("Received empty tuning state broadcast from core")
 			continue
 		}
 
 		// Send the tuning state to the callback function
-		log.Debug().Msgf("Received tuning state broadcast from system manager: %s", newTuningState.String())
+		log.Debug().Msgf("Received tuning state broadcast from core: %s", newTuningState.String())
 		onTuningState(newTuningState)
 	}
 }
@@ -65,7 +65,7 @@ func createUpdatedTuningState(currentTuning *pb_core_messages.TuningState, recei
 	}
 
 	// Strip the received tuning state of any parameters that are marked as "mutable: false" in the service.yaml file, not present in the service options, or have a different type than the one in the service options
-	// This is done to prevent the system manager from overwriting parameters that are not meant to be changed during runtime
+	// This is done to prevent the core from overwriting parameters that are not meant to be changed during runtime
 	newTuningStateParams := receivedTuning.GetDynamicParameters()
 	if newTuningStateParams == nil {
 		return nil
@@ -109,16 +109,16 @@ func tuningParameterMatchesOption(tuningParam *pb_core_messages.TuningState_Para
 }
 
 func requestTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState, error) {
-	// create a zmq client socket to the system manager
+	// create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to system manager: %s", err)
+		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
-	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to system manager to fetch tuning state")
+	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to core to fetch tuning state")
 	err = client.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to system manager: %s", err)
+		return nil, fmt.Errorf("Could not connect to core: %s", err)
 	}
 
 	// create a request message
@@ -135,8 +135,8 @@ func requestTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState,
 		return nil, err
 	}
 
-	// send request to the system manager
-	log.Info().Msg("Requesting tuning state from system manager")
+	// send request to the core
+	log.Info().Msg("Requesting tuning state from core")
 	_, err = client.SendBytes(msgBytes, 0)
 	if err != nil {
 		return nil, err
@@ -151,21 +151,21 @@ func requestTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState,
 				return
 			}
 			if (count) > 5 {
-				log.Warn().Msg("Still waiting for tuning state response from system manager. Are you sure the system manager is running ?")
+				log.Warn().Msg("Still waiting for tuning state response from core. Are you sure the core is running ?")
 			} else {
-				log.Info().Msg("Waiting for tuning state response from system manager")
+				log.Info().Msg("Waiting for tuning state response from core")
 			}
 			time.Sleep(5 * time.Second)
 		}
 	}()
 
-	// wait for a response from the system manager
+	// wait for a response from the core
 	resBytes, err := client.RecvBytes(0)
 	responseReceived = true
 
 	// the response must be of type TuningState (see include/tuningstate.proto)
 	// if not, we discard it: registration not successful
-	log.Info().Msg("Received tuning state response from system manager")
+	log.Info().Msg("Received tuning state response from core")
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func requestTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState,
 	}
 	responseState := response.GetTuningState()
 	if responseState == nil {
-		return nil, fmt.Errorf("Received empty response from system manager")
+		return nil, fmt.Errorf("Received empty response from core")
 	}
 
 	return responseState, nil

@@ -18,24 +18,25 @@ import (
 )
 
 const SERVER_ADDR = "tcp://localhost:1337"
+const SERVER_ENV_VAR = "ASE_CORE_ADDRESS"
 
 // The function that is called when a new tuning state is recevied
 type TuningStateCallbackFunction func(tuningState *pb_core_messages.TuningState)
 
 // The main function to run
-type MainFunction func(serviceInformation ResolvedService, sysmanInformation SystemManagerInfo, initialTuningState *pb_core_messages.TuningState) error
+type MainFunction func(serviceInformation ResolvedService, sysmanInformation CoreInfo, initialTuningState *pb_core_messages.TuningState) error
 
 // The function to call when the service is terminated or interrupted
 type TerminationFunction func(signal os.Signal)
 
-// The system manager exposes two endpoints: a pub/sub endpoint for broadcasting service registration and a req/rep endpoint for registering services and resolving dependencies
+// The core exposes two endpoints: a pub/sub endpoint for broadcasting service registration and a req/rep endpoint for registering services and resolving dependencies
 // this struct is used to store the addresses of these endpoints
 
-// This address should be set in the environment variable ASE_SYSMAN_SERVER_ADDRESS (for req/rep communication)
-func getSystemManagerRepReqAddress() (string, error) {
-	serverAddr := os.Getenv("ASE_SYSMAN_SERVER_ADDRESS")
+// This address should be set in the environment variable ASE_CORE_ADDRESS (for req/rep communication)
+func getCoreRepReqAddress() (string, error) {
+	serverAddr := os.Getenv(SERVER_ADDR)
 	if serverAddr == "" {
-		log.Warn().Msg(fmt.Sprintf("Environment variable ASE_SYSMAN_SERVER_ADDRESS is not set, using default address: %s", SERVER_ADDR))
+		log.Warn().Msg(fmt.Sprintf("Environment variable %s is not set, using default address: %s", SERVER_ENV_VAR, SERVER_ADDR))
 	}
 	serverAddr = SERVER_ADDR
 	return serverAddr, nil
@@ -95,7 +96,7 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 	debug := flag.Bool("debug", false, "show all logs (including debug)")
 	output := flag.String("output", "", "path of the output file to log to")
 	serviceYamlPath := flag.String("service-yaml", "service.yaml", "path to the service definition yaml file")
-	noLiveTuning := flag.Bool("disable-live-tuning", false, "disable live tuning updates from the system manager")
+	noLiveTuning := flag.Bool("disable-live-tuning", false, "disable live tuning updates from the core")
 
 	flag.Parse()
 
@@ -126,27 +127,27 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 	// Set up logging
 	setupLogging(*debug, *output, service)
 
-	// Try registering the service with the system manager
+	// Try registering the service with the core
 	resolvedDependencies := make([]ResolvedDependency, 0)
 
-	// The address on which to send requests to the system manager
+	// The address on which to send requests to the core
 	// will be filled in according to the environment variable
-	sysmanInfo := SystemManagerInfo{
+	sysmanInfo := CoreInfo{
 		RepReqAddress:    "",
 		BroadcastAddress: "",
 	}
 
-	// Don't register the system manager with itself
+	// Don't register the core with itself
 	if disableRegistration {
 		log.Info().Msg("Service registration skipped. Was disabled by the user.")
 	} else {
-		// Where can we reach the system manager?
-		sysmanInfo.RepReqAddress, err = getSystemManagerRepReqAddress()
+		// Where can we reach the core?
+		sysmanInfo.RepReqAddress, err = getCoreRepReqAddress()
 		if err != nil {
-			log.Fatal().Err(err).Msg("Error getting system manager details")
+			log.Fatal().Err(err).Msg("Error getting core details")
 		}
 
-		// Register the service with the system manager
+		// Register the service with the core
 		resolvedDependencies, err = registerService(service, sysmanInfo.RepReqAddress)
 		if err != nil {
 			log.Fatal().Err(err).Msg("Error registering service")
@@ -194,10 +195,10 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 	}
 
 	if !*noLiveTuning && !disableRegistration {
-		// We should be able to find the system manager broadcast address from our resolved dependencies
-		sysmanInfo.BroadcastAddress, err = serviceInformation.GetDependencyAddress("systemmanager", "broadcast")
+		// We should be able to find the core broadcast address from our resolved dependencies
+		sysmanInfo.BroadcastAddress, err = serviceInformation.GetDependencyAddress("core", "broadcast")
 		if err != nil {
-			log.Fatal().Err(err).Msg("Error getting system manager broadcast address")
+			log.Fatal().Err(err).Msg("Error getting core broadcast address")
 		}
 
 		// Listen for tuning state updates, and callback when a new tuning state is received

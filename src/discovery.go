@@ -37,18 +37,18 @@ func allDependenciesResolved(service serviceDefinition, resolvedDependencies []R
 	return true
 }
 
-// Will contact the discovery service to get the addresses of each dependency and register this service with the service discovery service (the system manager)
+// Will contact the discovery service to get the addresses of each dependency and register this service with the service discovery service (the core)
 func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]ResolvedDependency, error) {
-	// create a zmq client socket to the system manager
+	// create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to system manager: %s", err)
+		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
-	log.Debug().Str("service", service.Name).Str("address", sysmanReqRepAddr).Msg("Connecting to system manager")
+	log.Debug().Str("service", service.Name).Str("address", sysmanReqRepAddr).Msg("Connecting to core")
 	err = client.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to system manager: %s", err)
+		return nil, fmt.Errorf("Could not connect to core: %s", err)
 	}
 
 	// convert our service definition to a protobuf message
@@ -124,8 +124,8 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 		return nil, err
 	}
 
-	// send registration to the system manager
-	log.Info().Str("service", service.Name).Msg("Registering service with system manager")
+	// send registration to the core
+	log.Info().Str("service", service.Name).Msg("Registering service with core")
 	_, err = client.SendBytes(msgBytes, 0)
 	if err != nil {
 		return nil, err
@@ -140,21 +140,21 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 				return
 			}
 			if (count) > 5 {
-				log.Warn().Str("service", service.Name).Msgf("Still waiting for response from system manager. Are you sure the system manager is running and available at '%s'?", sysmanReqRepAddr)
+				log.Warn().Str("service", service.Name).Msgf("Still waiting for response from core. Are you sure the core is running and available at '%s'?", sysmanReqRepAddr)
 			} else {
-				log.Info().Str("service", service.Name).Msg("Waiting for response from system manager")
+				log.Info().Str("service", service.Name).Msg("Waiting for response from core")
 			}
 			time.Sleep(5 * time.Second)
 		}
 	}()
 
-	// wait for a response from the system manager
+	// wait for a response from the core
 	resBytes, err := client.RecvBytes(0)
 	responseReceived = true
 
 	// the response must be of type Service (see include/servicediscovery.proto)
 	// if not, we discard it: registration not successful
-	log.Info().Str("service", service.Name).Msg("Received registration response from system manager")
+	log.Info().Str("service", service.Name).Msg("Received registration response from core")
 	if err != nil {
 		return nil, err
 	}
@@ -166,24 +166,24 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	}
 	errorMessage := response.GetError()
 	if errorMessage != nil {
-		return nil, fmt.Errorf("System manager denied service registration: %s", errorMessage.Message)
+		return nil, fmt.Errorf("core denied service registration: %s", errorMessage.Message)
 	}
 	responseService := response.GetService()
 	if responseService == nil {
-		return nil, fmt.Errorf("Received empty response from system manager")
+		return nil, fmt.Errorf("Received empty response from core")
 	}
 	// check if the name and pid of the response match our registration, if not someone else registered with the same name
 	identifier := responseService.GetIdentifier()
 	if identifier == nil {
-		return nil, fmt.Errorf("Received empty response from system manager")
+		return nil, fmt.Errorf("Received empty response from core")
 	}
 	name := identifier.GetName()
 	pid := identifier.GetPid()
 	if name != service.Name {
-		return nil, fmt.Errorf("System manager denied service registration, name mismatch (registered as %s, but received %s)", service.Name, name)
+		return nil, fmt.Errorf("core denied service registration, name mismatch (registered as %s, but received %s)", service.Name, name)
 	}
 	if pid != int32(os.Getpid()) {
-		return nil, fmt.Errorf("System manager denied service registration, service %s was already registered by pid %d", service.Name, pid)
+		return nil, fmt.Errorf("core denied service registration, service %s was already registered by pid %d", service.Name, pid)
 	}
 	// check if the endpoints match our registration
 	registeredEndpints := responseService.GetEndpoints()
@@ -199,9 +199,9 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	// registration was successfull!
 	log.Info().Str("service", service.Name).Msg("Service registration successful")
 
-	// Resolve dependencies, always request the system manager broadcast address
+	// Resolve dependencies, always request the core broadcast address
 	service.Dependencies = append(service.Dependencies, dependency{
-		ServiceName: "systemmanager",
+		ServiceName: "core",
 		OutputName:  "broadcast",
 	})
 	return resolveDependencies(service, client)
@@ -292,13 +292,13 @@ func requestServiceInformation(serviceName string, serverSocket *zmq.Socket) (*p
 		log.Err(err).Msg("Error marshalling protobuf message")
 		return nil, err
 	}
-	// send the request to the system manager
+	// send the request to the core
 	_, err = serverSocket.SendBytes(msgBytes, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info().Str("dependency", serviceName).Msg("Requesting dependency information from system manager")
+	log.Info().Str("dependency", serviceName).Msg("Requesting dependency information from core")
 	gotReply := false
 	go func() {
 		count := 0
@@ -308,15 +308,15 @@ func requestServiceInformation(serviceName string, serverSocket *zmq.Socket) (*p
 				return
 			}
 			if count > 5 {
-				log.Warn().Str("dependency", serviceName).Msg("Still waiting for dependency response from system manager. Are you sure the system manager is running?")
+				log.Warn().Str("dependency", serviceName).Msg("Still waiting for dependency response from core. Are you sure the core is running?")
 			} else {
-				log.Info().Str("dependency", serviceName).Msg("Waiting for dependency response from system manager")
+				log.Info().Str("dependency", serviceName).Msg("Waiting for dependency response from core")
 			}
 			time.Sleep(5 * time.Second)
 			count++
 		}
 	}()
-	// wait for a response from the system manager
+	// wait for a response from the core
 	resBytes, err := serverSocket.RecvBytes(0)
 	gotReply = true
 	if err != nil {
@@ -329,7 +329,7 @@ func requestServiceInformation(serviceName string, serverSocket *zmq.Socket) (*p
 	err = proto.Unmarshal(resBytes, &response)
 	respondedService := response.GetService()
 	if respondedService == nil {
-		return nil, fmt.Errorf("Received empty response from system manager, expected Service")
+		return nil, fmt.Errorf("Received empty response from core, expected Service")
 	}
 	if err != nil {
 		return nil, err
@@ -384,16 +384,16 @@ func getDependencyFromServiceInformation(service *pb_core_messages.Service, depe
 
 // Get a list of all services
 func getServiceList(sysmanReqRepAddr string) (*pb_core_messages.ServiceList, error) {
-	// Create a zmq client socket to the system manager
+	// Create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to system manager: %s", err)
+		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
-	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to system manager")
+	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to core")
 	err = client.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to system manager: %s", err)
+		return nil, fmt.Errorf("Could not connect to core: %s", err)
 	}
 
 	// Create a request message
@@ -407,12 +407,12 @@ func getServiceList(sysmanReqRepAddr string) (*pb_core_messages.ServiceList, err
 	if err != nil {
 		return nil, err
 	}
-	// Send the request to the system manager
+	// Send the request to the core
 	_, err = client.SendBytes(msgBytes, 0)
 	if err != nil {
 		return nil, err
 	}
-	// Wait for a response from the system manager
+	// Wait for a response from the core
 	resBytes, err := client.RecvBytes(0)
 	if err != nil {
 		return nil, err
@@ -426,23 +426,23 @@ func getServiceList(sysmanReqRepAddr string) (*pb_core_messages.ServiceList, err
 
 	serviceList := response.GetServiceList()
 	if serviceList == nil {
-		return nil, fmt.Errorf("Received empty response from system manager")
+		return nil, fmt.Errorf("Received empty response from core")
 	}
 	return serviceList, nil
 }
 
 // Get the tuning state
 func getTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState, error) {
-	// Create a zmq client socket to the system manager
+	// Create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to system manager: %s", err)
+		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
-	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to system manager")
+	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to core")
 	err = client.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to system manager: %s", err)
+		return nil, fmt.Errorf("Could not connect to core: %s", err)
 	}
 
 	// Create a request message
@@ -456,12 +456,12 @@ func getTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState, err
 	if err != nil {
 		return nil, err
 	}
-	// Send the request to the system manager
+	// Send the request to the core
 	_, err = client.SendBytes(msgBytes, 0)
 	if err != nil {
 		return nil, err
 	}
-	// Wait for a response from the system manager
+	// Wait for a response from the core
 	resBytes, err := client.RecvBytes(0)
 	if err != nil {
 		return nil, err
@@ -475,7 +475,7 @@ func getTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState, err
 
 	tuningState := response.GetTuningState()
 	if tuningState == nil {
-		return nil, fmt.Errorf("Received empty response from system manager")
+		return nil, fmt.Errorf("Received empty response from core")
 	}
 	return tuningState, nil
 }
@@ -486,15 +486,15 @@ func updateServiceStatus(
 	identifier *pb_core_messages.ServiceIdentifier,
 	status pb_core_messages.ServiceStatus,
 ) error {
-	// create a zmq client socket to the system manager
+	// create a zmq client socket to the core
 	socket, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return fmt.Errorf("Could not open ZMQ connection to system manager: %s", err)
+		return fmt.Errorf("Could not open ZMQ connection to core: %s", err)
 	}
 	defer socket.Close()
 	err = socket.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return fmt.Errorf("Could not connect to system manager: %s", err)
+		return fmt.Errorf("Could not connect to core: %s", err)
 	}
 
 	// Create a request message
@@ -513,7 +513,7 @@ func updateServiceStatus(
 		return err
 	}
 
-	// Send the request to the system manager
+	// Send the request to the core
 	_, err = socket.SendBytes(msgBytes, 0)
 	if err != nil {
 		return err

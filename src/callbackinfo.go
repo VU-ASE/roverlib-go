@@ -74,18 +74,18 @@ func (service ResolvedService) GetOutputAddressList() []output {
 }
 
 // Information about the core. This struct has useful methods implemented to repeat the same operations on the dependencies.
-type SystemManagerInfo struct {
+type CoreInfo struct {
 	RepReqAddress    string // the req/rep address of the core
 	BroadcastAddress string // the public broadcast address of the core
 }
 
 // Utility function to get a list of all services running on the core
-func (core SystemManagerInfo) GetAllServices() (*pb_core_messages.ServiceList, error) {
+func (core CoreInfo) GetAllServices() (*pb_core_messages.ServiceList, error) {
 	return getServiceList(core.RepReqAddress)
 }
 
 // Utility function to get the latest tuning state from the core
-func (core SystemManagerInfo) GetTuningState() (*pb_core_messages.TuningState, error) {
+func (core CoreInfo) GetTuningState() (*pb_core_messages.TuningState, error) {
 	return getTuningState(core.RepReqAddress)
 }
 

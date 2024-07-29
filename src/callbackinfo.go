@@ -41,7 +41,7 @@ func (service ResolvedService) GetDependencyAddress(serviceName string, outputNa
 			return rewriteDependencyAddress(dependency.Address), nil
 		}
 	}
-	return "", fmt.Errorf("Dependency '%s.%s' not found. Are you sure it is exposed by %s?", serviceName, outputName, serviceName)
+	return "", fmt.Errorf("dependency '%s.%s' not found. Are you sure it is exposed by %s?", serviceName, outputName, serviceName)
 }
 
 // Utility function that returns a list of dependency endpoints
@@ -65,7 +65,7 @@ func (service ResolvedService) GetOutputAddress(outputName string) (string, erro
 			return rewriteOutputAddress(output.Address), nil
 		}
 	}
-	return "", fmt.Errorf("Output '%s' not found. Was it defined in service.yaml?", outputName)
+	return "", fmt.Errorf("output '%s' not found. Was it defined in service.yaml?", outputName)
 }
 
 // Utility function that returns a list of output addresses
@@ -74,25 +74,25 @@ func (service ResolvedService) GetOutputAddressList() []output {
 }
 
 // Information about the core. This struct has useful methods implemented to repeat the same operations on the dependencies.
-type CoreInfo struct {
+type SystemManagerInfo struct {
 	RepReqAddress    string // the req/rep address of the core
 	BroadcastAddress string // the public broadcast address of the core
 }
 
 // Utility function to get a list of all services running on the core
-func (core CoreInfo) GetAllServices() (*pb_core_messages.ServiceList, error) {
+func (core SystemManagerInfo) GetAllServices() (*pb_core_messages.ServiceList, error) {
 	return getServiceList(core.RepReqAddress)
 }
 
 // Utility function to get the latest tuning state from the core
-func (core CoreInfo) GetTuningState() (*pb_core_messages.TuningState, error) {
+func (core SystemManagerInfo) GetTuningState() (*pb_core_messages.TuningState, error) {
 	return getTuningState(core.RepReqAddress)
 }
 
 // Utility function to easily read values from the tuning state
 func GetTuningInt(key string, tuningState *pb_core_messages.TuningState) (int, error) {
 	if tuningState == nil {
-		return 0, fmt.Errorf("Tuning state is nil")
+		return 0, fmt.Errorf("tuning state is nil")
 	}
 
 	// Iterate over all the tuning state values
@@ -103,13 +103,13 @@ func GetTuningInt(key string, tuningState *pb_core_messages.TuningState) (int, e
 		}
 	}
 
-	return 0, fmt.Errorf("Key '%s' not found in tuning state", key)
+	return 0, fmt.Errorf("key '%s' not found in tuning state", key)
 }
 
 // Utility function to easily read values from the tuning state
 func GetTuningString(key string, tuningState *pb_core_messages.TuningState) (string, error) {
 	if tuningState == nil {
-		return "", fmt.Errorf("Tuning state is nil")
+		return "", fmt.Errorf("tuning state is nil")
 	}
 
 	// Iterate over all the tuning state values
@@ -120,13 +120,13 @@ func GetTuningString(key string, tuningState *pb_core_messages.TuningState) (str
 		}
 	}
 
-	return "", fmt.Errorf("Key '%s' not found in tuning state", key)
+	return "", fmt.Errorf("key '%s' not found in tuning state", key)
 }
 
 // Utility function to easily read values from the tuning state
 func GetTuningFloat(key string, tuningState *pb_core_messages.TuningState) (float32, error) {
 	if tuningState == nil {
-		return 0, fmt.Errorf("Tuning state is nil")
+		return 0, fmt.Errorf("tuning state is nil")
 	}
 
 	// Iterate over all the tuning state values
@@ -137,5 +137,5 @@ func GetTuningFloat(key string, tuningState *pb_core_messages.TuningState) (floa
 		}
 	}
 
-	return 0, fmt.Errorf("Key '%s' not found in tuning state", key)
+	return 0, fmt.Errorf("key '%s' not found in tuning state", key)
 }

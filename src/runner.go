@@ -24,7 +24,7 @@ const SERVER_ENV_VAR = "ASE_CORE_ADDRESS"
 type TuningStateCallbackFunction func(tuningState *pb_core_messages.TuningState)
 
 // The main function to run
-type MainFunction func(serviceInformation ResolvedService, sysmanInformation CoreInfo, initialTuningState *pb_core_messages.TuningState) error
+type MainFunction func(serviceInformation ResolvedService, sysmanInformation SystemManagerInfo, initialTuningState *pb_core_messages.TuningState) error
 
 // The function to call when the service is terminated or interrupted
 type TerminationFunction func(signal os.Signal)
@@ -132,7 +132,7 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 
 	// The address on which to send requests to the core
 	// will be filled in according to the environment variable
-	sysmanInfo := CoreInfo{
+	sysmanInfo := SystemManagerInfo{
 		RepReqAddress:    "",
 		BroadcastAddress: "",
 	}

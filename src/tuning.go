@@ -112,13 +112,13 @@ func requestTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState,
 	// create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
+		return nil, fmt.Errorf("could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
 	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to core to fetch tuning state")
 	err = client.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to core: %s", err)
+		return nil, fmt.Errorf("could not connect to core: %s", err)
 	}
 
 	// create a request message
@@ -177,7 +177,7 @@ func requestTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState,
 	}
 	responseState := response.GetTuningState()
 	if responseState == nil {
-		return nil, fmt.Errorf("Received empty response from core")
+		return nil, fmt.Errorf("received empty response from core")
 	}
 
 	return responseState, nil
@@ -203,7 +203,7 @@ func convertOptionsToTuningState(options []option) (*pb_core_messages.TuningStat
 			case "int":
 				intval, err := strconv.Atoi(opt.DefaultValue)
 				if err != nil {
-					return nil, fmt.Errorf("Error converting default value of option '%s' to int: %s", opt.Name, err)
+					return nil, fmt.Errorf("error converting default value of option '%s' to int: %s", opt.Name, err)
 				}
 				newParam.Parameter = &pb_core_messages.TuningState_Parameter_Int{
 					Int: &pb_core_messages.TuningState_Parameter_IntParameter{
@@ -214,7 +214,7 @@ func convertOptionsToTuningState(options []option) (*pb_core_messages.TuningStat
 			case "float":
 				floatval, err := strconv.ParseFloat(opt.DefaultValue, 32)
 				if err != nil {
-					return nil, fmt.Errorf("Error converting default value of option '%s' to float: %s", opt.Name, err)
+					return nil, fmt.Errorf("error converting default value of option '%s' to float: %s", opt.Name, err)
 				}
 				newParam.Parameter = &pb_core_messages.TuningState_Parameter_Float{
 					Float: &pb_core_messages.TuningState_Parameter_FloatParameter{
@@ -223,7 +223,7 @@ func convertOptionsToTuningState(options []option) (*pb_core_messages.TuningStat
 					},
 				}
 			default:
-				return nil, fmt.Errorf("Unknown type '%s' for option '%s'", opt.Type, opt.Name)
+				return nil, fmt.Errorf("unknown type '%s' for option '%s'", opt.Type, opt.Name)
 			}
 
 			if newParam.Parameter != nil {
@@ -247,7 +247,7 @@ func getUnsetOptions(tuningState *pb_core_messages.TuningState, options []option
 			_, err = GetTuningFloat(opt.Name, tuningState)
 		default:
 			log.Err(err).Msg("Error getting option from tuning state")
-			err = fmt.Errorf("Unknown type '%s' for option '%s'", opt.Type, opt.Name)
+			err = fmt.Errorf("unknown type '%s' for option '%s'", opt.Type, opt.Name)
 		}
 		if err != nil {
 			unsetOptions = append(unsetOptions, opt)

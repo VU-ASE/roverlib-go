@@ -42,13 +42,13 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	// create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
+		return nil, fmt.Errorf("could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
 	log.Debug().Str("service", service.Name).Str("address", sysmanReqRepAddr).Msg("Connecting to core")
 	err = client.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to core: %s", err)
+		return nil, fmt.Errorf("could not connect to core: %s", err)
 	}
 
 	// convert our service definition to a protobuf message
@@ -76,7 +76,7 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 				newOption.Type = pb_core_messages.ServiceOption_INT
 				intval, err := strconv.Atoi(option.DefaultValue)
 				if err != nil {
-					return nil, fmt.Errorf("Option '%s' has type int, but a default value that is not an int: %s", option.Name, option.DefaultValue)
+					return nil, fmt.Errorf("option '%s' has type int, but a default value that is not an int: %s", option.Name, option.DefaultValue)
 				} else {
 					newOption.IntDefault = int32(intval)
 				}
@@ -84,12 +84,12 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 				newOption.Type = pb_core_messages.ServiceOption_FLOAT
 				floatval, err := strconv.ParseFloat(option.DefaultValue, 64)
 				if err != nil {
-					return nil, fmt.Errorf("Option '%s' has type float, but a default value that is not a float: %s", option.Name, option.DefaultValue)
+					return nil, fmt.Errorf("option '%s' has type float, but a default value that is not a float: %s", option.Name, option.DefaultValue)
 				} else {
 					newOption.FloatDefault = float32(floatval)
 				}
 			default:
-				return nil, fmt.Errorf("Option '%s' has an unknown type: %s", option.Name, option.Type)
+				return nil, fmt.Errorf("option '%s' has an unknown type: %s", option.Name, option.Type)
 			}
 		}
 		options = append(options, newOption)
@@ -170,12 +170,12 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	}
 	responseService := response.GetService()
 	if responseService == nil {
-		return nil, fmt.Errorf("Received empty response from core")
+		return nil, fmt.Errorf("received empty response from core")
 	}
 	// check if the name and pid of the response match our registration, if not someone else registered with the same name
 	identifier := responseService.GetIdentifier()
 	if identifier == nil {
-		return nil, fmt.Errorf("Received empty response from core")
+		return nil, fmt.Errorf("received empty response from core")
 	}
 	name := identifier.GetName()
 	pid := identifier.GetPid()
@@ -190,9 +190,9 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	for i, endpoint := range endpoints {
 		registeredEndpoint := registeredEndpints[i]
 		if registeredEndpoint == nil {
-			return nil, fmt.Errorf("Endpoint %s was not registered", endpoint.Name)
+			return nil, fmt.Errorf("endpoint %s was not registered", endpoint.Name)
 		} else if registeredEndpoint.GetName() != endpoint.Name || registeredEndpoint.GetAddress() != endpoint.Address {
-			return nil, fmt.Errorf("Endpoint %s was registered with different address (%s) than requested (%s)", endpoint.Name, registeredEndpoint.GetAddress(), endpoint.Address)
+			return nil, fmt.Errorf("endpoint %s was registered with different address (%s) than requested (%s)", endpoint.Name, registeredEndpoint.GetAddress(), endpoint.Address)
 		}
 	}
 
@@ -329,7 +329,7 @@ func requestServiceInformation(serviceName string, serverSocket *zmq.Socket) (*p
 	err = proto.Unmarshal(resBytes, &response)
 	respondedService := response.GetService()
 	if respondedService == nil {
-		return nil, fmt.Errorf("Received empty response from core, expected Service")
+		return nil, fmt.Errorf("received empty response from core, expected Service")
 	}
 	if err != nil {
 		return nil, err
@@ -360,13 +360,13 @@ func isDependencyOfService(dependency dependency, serviceName string) bool {
 // Returns a resolved dependency, given a service status and a dependency
 func getDependencyFromServiceInformation(service *pb_core_messages.Service, dependency dependency) (ResolvedDependency, error) {
 	if service == nil {
-		return ResolvedDependency{}, fmt.Errorf("Received empty service status")
+		return ResolvedDependency{}, fmt.Errorf("received empty service status")
 	}
 
 	// check if the service exposes the output that we need
 	endpoints := service.GetEndpoints()
 	if endpoints == nil {
-		return ResolvedDependency{}, fmt.Errorf("Received empty service endpoints")
+		return ResolvedDependency{}, fmt.Errorf("received empty service endpoints")
 	}
 
 	for _, endpoint := range endpoints {
@@ -387,13 +387,13 @@ func getServiceList(sysmanReqRepAddr string) (*pb_core_messages.ServiceList, err
 	// Create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
+		return nil, fmt.Errorf("could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
 	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to core")
 	err = client.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to core: %s", err)
+		return nil, fmt.Errorf("could not connect to core: %s", err)
 	}
 
 	// Create a request message
@@ -426,7 +426,7 @@ func getServiceList(sysmanReqRepAddr string) (*pb_core_messages.ServiceList, err
 
 	serviceList := response.GetServiceList()
 	if serviceList == nil {
-		return nil, fmt.Errorf("Received empty response from core")
+		return nil, fmt.Errorf("received empty response from core")
 	}
 	return serviceList, nil
 }
@@ -436,13 +436,13 @@ func getTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState, err
 	// Create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
+		return nil, fmt.Errorf("could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
 	log.Debug().Str("address", sysmanReqRepAddr).Msg("Connecting to core")
 	err = client.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to core: %s", err)
+		return nil, fmt.Errorf("could not connect to core: %s", err)
 	}
 
 	// Create a request message
@@ -475,7 +475,7 @@ func getTuningState(sysmanReqRepAddr string) (*pb_core_messages.TuningState, err
 
 	tuningState := response.GetTuningState()
 	if tuningState == nil {
-		return nil, fmt.Errorf("Received empty response from core")
+		return nil, fmt.Errorf("received empty response from core")
 	}
 	return tuningState, nil
 }
@@ -489,12 +489,12 @@ func updateServiceStatus(
 	// create a zmq client socket to the core
 	socket, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return fmt.Errorf("Could not open ZMQ connection to core: %s", err)
+		return fmt.Errorf("could not open ZMQ connection to core: %s", err)
 	}
 	defer socket.Close()
 	err = socket.Connect(sysmanReqRepAddr)
 	if err != nil {
-		return fmt.Errorf("Could not connect to core: %s", err)
+		return fmt.Errorf("could not connect to core: %s", err)
 	}
 
 	// Create a request message

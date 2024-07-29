@@ -23,12 +23,12 @@ func SendRequestToCore(message *pb_core_messages.CoreMessage) (*pb_core_messages
 	// create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open ZMQ connection to core: %s", err)
+		return nil, fmt.Errorf("could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
 	err = client.Connect(addr)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to core: %s", err)
+		return nil, fmt.Errorf("could not connect to core: %s", err)
 	}
 
 	// convert the message to bytes

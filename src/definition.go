@@ -52,17 +52,17 @@ type option struct {
 func validateServiceDefinitionOption(option option) error {
 	// name not empty?
 	if option.Name == "" {
-		return fmt.Errorf("Option name is empty")
+		return fmt.Errorf("option name is empty")
 	}
 
 	// correct type?
 	if option.Type != "string" && option.Type != "int" && option.Type != "float" {
-		return fmt.Errorf("Option '%s' type must be string, int or float (got %s)", option.Name, option.Type)
+		return fmt.Errorf("option '%s' type must be string, int or float (got %s)", option.Name, option.Type)
 	}
 
 	// if not mutable, default value must be set
 	if !option.Mutable && option.DefaultValue == "" {
-		return fmt.Errorf("Option '%s' has no default value but is also declared not mutable. Add a default value or mark this option as mutable by setting mutable: true", option.Name)
+		return fmt.Errorf("option '%s' has no default value but is also declared not mutable. Add a default value or mark this option as mutable by setting mutable: true", option.Name)
 	}
 
 	// check if default value is of the correct type
@@ -74,12 +74,12 @@ func validateServiceDefinitionOption(option option) error {
 		case "int":
 			_, err := strconv.Atoi(option.DefaultValue)
 			if err != nil {
-				return fmt.Errorf("Option '%s' has type int, but a default value that is not an int: %s", option.Name, option.DefaultValue)
+				return fmt.Errorf("option '%s' has type int, but a default value that is not an int: %s", option.Name, option.DefaultValue)
 			}
 		case "float":
 			_, err := strconv.ParseFloat(option.DefaultValue, 64)
 			if err != nil {
-				return fmt.Errorf("Option '%s' has type float, but a default value that is not a float: %s", option.Name, option.DefaultValue)
+				return fmt.Errorf("option '%s' has type float, but a default value that is not a float: %s", option.Name, option.DefaultValue)
 			}
 		}
 	}
@@ -98,7 +98,7 @@ func validateServiceDefinitionOptions(options []option) error {
 		// does an option with the same name exist?
 		for j, otherOption := range options {
 			if i != j && option.Name == otherOption.Name {
-				return fmt.Errorf("Duplicate option: %s", option.Name)
+				return fmt.Errorf("duplicate option: %s", option.Name)
 			}
 		}
 	}
@@ -108,23 +108,23 @@ func validateServiceDefinitionOptions(options []option) error {
 
 func validateServiceDefinition(serviceDefinition serviceDefinition) error {
 	if serviceDefinition.Name == "" {
-		return fmt.Errorf("Service name is empty")
+		return fmt.Errorf("service name is empty")
 	} else if serviceDefinition.Description == "" {
-		return fmt.Errorf("Service description is empty")
+		return fmt.Errorf("service description is empty")
 	}
 
 	if len(serviceDefinition.Dependencies) > 0 {
 		for i, dependency := range serviceDefinition.Dependencies {
 			if dependency.ServiceName == "" {
-				return fmt.Errorf("Dependency service name is empty")
+				return fmt.Errorf("dependency service name is empty")
 			} else if dependency.OutputName == "" {
-				return fmt.Errorf("Dependency output name is empty")
+				return fmt.Errorf("dependency output name is empty")
 			}
 
 			// Check if service name and output name together are unique
 			for j, otherDependency := range serviceDefinition.Dependencies {
 				if i != j && dependency.ServiceName == otherDependency.ServiceName && dependency.OutputName == otherDependency.OutputName {
-					return fmt.Errorf("Duplicate dependency: %s %s", dependency.ServiceName, dependency.OutputName)
+					return fmt.Errorf("duplicate dependency: %s %s", dependency.ServiceName, dependency.OutputName)
 				}
 			}
 		}
@@ -133,18 +133,18 @@ func validateServiceDefinition(serviceDefinition serviceDefinition) error {
 	if len(serviceDefinition.Outputs) > 0 {
 		for i, output := range serviceDefinition.Outputs {
 			if output.Name == "" {
-				return fmt.Errorf("Output name is empty")
+				return fmt.Errorf("output name is empty")
 			} else if output.Address == "" {
-				return fmt.Errorf("Output address is empty")
+				return fmt.Errorf("output address is empty")
 			}
 
 			// Check if names and addresses (individually) are unique
 			for j, otherOutput := range serviceDefinition.Outputs {
 				if i != j && output.Name == otherOutput.Name {
-					return fmt.Errorf("Duplicate output name: %s", output.Name)
+					return fmt.Errorf("duplicate output name: %s", output.Name)
 				}
 				if i != j && output.Address == otherOutput.Address {
-					return fmt.Errorf("Duplicate output address: %s", output.Address)
+					return fmt.Errorf("duplicate output address: %s", output.Address)
 				}
 			}
 		}

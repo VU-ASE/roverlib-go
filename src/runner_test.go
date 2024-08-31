@@ -1,4 +1,4 @@
-package servicerunner
+package roverlib
 
 import (
 	"testing"

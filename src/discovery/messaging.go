@@ -1,9 +1,11 @@
-package servicerunner
+package discovery
 
 import (
 	"fmt"
+	"time"
 
 	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
+	"github.com/VU-ASE/roverlib/src/runner"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -13,12 +15,9 @@ import (
 // Exposed package functions to send and receive messages to and from the core
 //
 
-func SendRequestToCore(message *pb_core_messages.CoreMessage) (*pb_core_messages.CoreMessage, error) {
+func SendRequestToCore(message *pb_core_messages.CoreMessage, core runner.CoreInfo) (*pb_core_messages.CoreMessage, error) {
 	// Get the address to send to
-	addr, err := getCoreRepReqAddress()
-	if err != nil {
-		return nil, err
-	}
+	addr := core.RepReqAddress
 
 	// create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
@@ -44,8 +43,26 @@ func SendRequestToCore(message *pb_core_messages.CoreMessage) (*pb_core_messages
 		return nil, err
 	}
 
+	responseReceived := false
+	go func() {
+		count := 0
+		for {
+			// print a idle message every 5 seconds, until were done
+			if responseReceived {
+				return
+			}
+			if (count) > 5 {
+				log.Warn().Msgf("Still waiting for response from core. Are you sure the core is running and available at '%s'?", addr)
+			} else {
+				log.Info().Msg("Waiting for response from core")
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}()
+
 	// wait for the response
 	msg, err := client.RecvBytes(0)
+	responseReceived = true
 	if err != nil {
 		return nil, err
 	}

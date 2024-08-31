@@ -1,4 +1,4 @@
-package servicerunner
+package roverlib
 
 import (
 	"errors"
@@ -13,21 +13,13 @@ import (
 	build_debug "runtime/debug"
 
 	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
+	"github.com/VU-ASE/roverlib/src/rover"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 const SERVER_ADDR = "tcp://localhost:1337"
 const SERVER_ENV_VAR = "ASE_CORE_ADDRESS"
-
-// The function that is called when a new tuning state is recevied
-type TuningStateCallbackFunction func(tuningState *pb_core_messages.TuningState)
-
-// The main function to run
-type MainFunction func(serviceInformation ResolvedService, coreInformation CoreInfo, initialTuningState *pb_core_messages.TuningState) error
-
-// The function to call when the service is terminated or interrupted
-type TerminationFunction func(signal os.Signal)
 
 // The core exposes two endpoints: a pub/sub endpoint for broadcasting service registration and a req/rep endpoint for registering services and resolving dependencies
 // this struct is used to store the addresses of these endpoints
@@ -43,7 +35,7 @@ func getCoreRepReqAddress() (string, error) {
 }
 
 // Configures log level and output
-func setupLogging(debug bool, outputPath string, service serviceDefinition) {
+func setupLogging(debug bool, outputPath string, service rover.Service) {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
 	// Set up custom caller prefix
 	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {

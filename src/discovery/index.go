@@ -1,169 +1,122 @@
-package servicerunner
+package discovery
 
 import (
 	"errors"
 	"fmt"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
-	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
+	pb_core "github.com/VU-ASE/rovercom/packages/go/core"
 	customerrors "github.com/VU-ASE/roverlib/src/errors"
+	"github.com/VU-ASE/roverlib/src/rover"
+	"github.com/VU-ASE/roverlib/src/runner"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 )
 
 // Checks if all depdnencies are resolved by checking if the list of resolved dependencies contains each dependency
-func allDependenciesResolved(service serviceDefinition, resolvedDependencies []ResolvedDependency) bool {
-	if len(service.Dependencies) == 0 {
-		return true
-	}
-
-	for _, dependency := range service.Dependencies {
-		found := false
-		for _, resolvedDependency := range resolvedDependencies {
-			if strings.EqualFold(dependency.ServiceName, resolvedDependency.ServiceName) && strings.EqualFold(dependency.OutputName, resolvedDependency.OutputName) {
-				found = true
+func AllInputsResolved(service rover.Service, resolvedInputs []runner.ServiceInput) bool {
+	for _, input := range service.Inputs {
+		for _, stream := range input.Streams {
+			found := false
+			for _, resolvedInput := range resolvedInputs {
+				if strings.EqualFold(input.Service, resolvedInput.Service) && strings.EqualFold(stream, resolvedInput.Stream) {
+					found = true
+				}
 			}
-		}
-		if !found {
-			return false
+			if !found {
+				return false
+			}
 		}
 	}
 
 	return true
 }
 
-// Will contact the discovery service to get the addresses of each dependency and register this service with the service discovery service (the core)
-func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]ResolvedDependency, error) {
-	// create a zmq client socket to the core
+// Will contact the core to register this service and resolve all dependencies
+func RegisterService(service rover.Service, core runner.CoreInfo) ([]ResolvedDependency, error) {
+	// Create a zmq client socket to the core
 	client, err := zmq.NewSocket(zmq.REQ)
 	if err != nil {
 		return nil, fmt.Errorf("could not open ZMQ connection to core: %s", err)
 	}
 	defer client.Close()
-	log.Debug().Str("service", service.Name).Str("address", sysmanReqRepAddr).Msg("Connecting to core")
-	err = client.Connect(sysmanReqRepAddr)
+	addr := core.RepReqAddress
+	log.Debug().Str("service", service.Name).Str("address", addr).Msg("Connecting to core")
+	err = client.Connect(addr)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to core: %s", err)
 	}
 
-	// convert our service definition to a protobuf message
-	endpoints := []*pb_core_messages.ServiceEndpoint{}
+	// Convert our service definition to a protobuf message
+	outputs := []*pb_core.ServiceEndpoint{}
 	for _, output := range service.Outputs {
-		// convert our struct to the ServiceEndpoint protobuf message
-		endpoints = append(endpoints, &pb_core_messages.ServiceEndpoint{
-			Name:    output.Name,
-			Address: output.Address,
+		// Convert our struct to the ServiceEndpoint protobuf message
+		outputs = append(outputs, &pb_core.ServiceEndpoint{
+			Name: output,
 		})
 	}
-	options := []*pb_core_messages.ServiceOption{}
+	options := []*pb_core.ServiceOption{}
 	for _, option := range service.Options {
-		// convert our struct to the ServiceOption protobuf message
-		newOption := &pb_core_messages.ServiceOption{
+		// Convert our struct to the ServiceOption protobuf message
+		newOption := &pb_core.ServiceOption{
 			Name:    option.Name,
-			Mutable: option.Mutable,
+			Mutable: option.Tunable,
 		}
-		if option.DefaultValue != "" {
-			switch option.Type {
-			case "string":
-				newOption.Type = pb_core_messages.ServiceOption_STRING
-				newOption.StringDefault = option.DefaultValue
-			case "int":
-				newOption.Type = pb_core_messages.ServiceOption_INT
-				intval, err := strconv.Atoi(option.DefaultValue)
-				if err != nil {
-					return nil, fmt.Errorf("option '%s' has type int, but a default value that is not an int: %s", option.Name, option.DefaultValue)
-				} else {
-					newOption.IntDefault = int32(intval)
-				}
-			case "float":
-				newOption.Type = pb_core_messages.ServiceOption_FLOAT
-				floatval, err := strconv.ParseFloat(option.DefaultValue, 64)
-				if err != nil {
-					return nil, fmt.Errorf("option '%s' has type float, but a default value that is not a float: %s", option.Name, option.DefaultValue)
-				} else {
-					newOption.FloatDefault = float32(floatval)
-				}
-			default:
-				return nil, fmt.Errorf("option '%s' has an unknown type: %s", option.Name, option.Type)
-			}
+		switch option.Value.(type) {
+		case string:
+			newOption.Type = pb_core.ServiceOption_STRING
+			newOption.StringDefault = option.Value.(string)
+		case int:
+			newOption.Type = pb_core.ServiceOption_INT
+			newOption.IntDefault = int32(option.Value.(int))
+		case float64:
+			newOption.Type = pb_core.ServiceOption_FLOAT
+			newOption.FloatDefault = float32(option.Value.(float64))
+		default:
+			return nil, fmt.Errorf("option '%s' has an invalid type: %T", option.Name, option.Value)
 		}
 		options = append(options, newOption)
 	}
-	dependencies := []*pb_core_messages.ServiceDependency{}
-	for _, dependency := range service.Dependencies {
-		// convert our struct to the ServiceDependency protobuf message
-		dependencies = append(dependencies, &pb_core_messages.ServiceDependency{
-			ServiceName: dependency.ServiceName,
-			OutputName:  dependency.OutputName,
-		})
+	inputs := []*pb_core.ServiceDependency{}
+	for _, input := range service.Inputs {
+		for _, stream := range input.Streams {
+			inputs = append(inputs, &pb_core.ServiceDependency{
+				ServiceName: input.Service,
+				OutputName:  stream,
+			})
+		}
 	}
-	// create a registration message
-	regMsg := pb_core_messages.CoreMessage{
-		Msg: &pb_core_messages.CoreMessage_Service{
-			Service: &pb_core_messages.Service{
-				Identifier: &pb_core_messages.ServiceIdentifier{
+
+	// Create a registration message
+	regMsg := pb_core.CoreMessage{
+		Msg: &pb_core.CoreMessage_Service{
+			Service: &pb_core.Service{
+				Identifier: &pb_core.ServiceIdentifier{
 					Name: service.Name,
 					Pid:  int32(os.Getpid()),
 				},
-				Endpoints:    endpoints,
+				Endpoints:    outputs,
 				Options:      options,
-				Dependencies: dependencies,
+				Dependencies: inputs,
 			},
 		},
 	}
 
-	// convert the message to bytes
-	msgBytes, err := proto.Marshal(&regMsg)
-	if err != nil {
-		log.Err(err).Msg("Error marshalling protobuf message")
-		return nil, err
-	}
-
-	// send registration to the core
-	log.Info().Str("service", service.Name).Msg("Registering service with core")
-	_, err = client.SendBytes(msgBytes, 0)
+	// Send registration to the core
+	response, err := SendRequestToCore(&regMsg, core)
 	if err != nil {
 		return nil, err
 	}
-
-	responseReceived := false
-	go func() {
-		count := 0
-		for {
-			// print a idle message every 5 seconds, until were done
-			if responseReceived {
-				return
-			}
-			if (count) > 5 {
-				log.Warn().Str("service", service.Name).Msgf("Still waiting for response from core. Are you sure the core is running and available at '%s'?", sysmanReqRepAddr)
-			} else {
-				log.Info().Str("service", service.Name).Msg("Waiting for response from core")
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
-
-	// wait for a response from the core
-	resBytes, err := client.RecvBytes(0)
-	responseReceived = true
-
-	// the response must be of type Service (see include/servicediscovery.proto)
-	// if not, we discard it: registration not successful
 	log.Info().Str("service", service.Name).Msg("Received registration response from core")
 	if err != nil {
 		return nil, err
 	}
-	response := pb_core_messages.CoreMessage{}
-	err = proto.Unmarshal(resBytes, &response)
-	if err != nil {
-		log.Err(err).Msg("Error unmarshalling protobuf message")
-		return nil, err
-	}
+	// The response must be of type Service (see include/servicediscovery.proto)
+	// if not, we discard it: registration not successful
 	errorMessage := response.GetError()
 	if errorMessage != nil {
 		return nil, fmt.Errorf("core denied service registration: %s", errorMessage.Message)
@@ -172,7 +125,7 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	if responseService == nil {
 		return nil, fmt.Errorf("received empty response from core")
 	}
-	// check if the name and pid of the response match our registration, if not someone else registered with the same name
+	// Check if the name and pid of the response match our registration, if not someone else registered with the same name
 	identifier := responseService.GetIdentifier()
 	if identifier == nil {
 		return nil, fmt.Errorf("received empty response from core")
@@ -187,7 +140,7 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 	}
 	// check if the endpoints match our registration
 	registeredEndpints := responseService.GetEndpoints()
-	for i, endpoint := range endpoints {
+	for i, endpoint := range outputs {
 		registeredEndpoint := registeredEndpints[i]
 		if registeredEndpoint == nil {
 			return nil, fmt.Errorf("endpoint %s was not registered", endpoint.Name)
@@ -196,11 +149,11 @@ func registerService(service serviceDefinition, sysmanReqRepAddr string) ([]Reso
 		}
 	}
 
-	// registration was successfull!
+	// Registration was successfull!
 	log.Info().Str("service", service.Name).Msg("Service registration successful")
 
 	// Resolve dependencies, always request the core broadcast address
-	service.Dependencies = append(service.Dependencies, dependency{
+	service.Inputs = append(service.Inputs, runner.ServiceInput{
 		ServiceName: "core",
 		OutputName:  "broadcast",
 	})

@@ -8,34 +8,36 @@ import (
 )
 
 // A service name can only contain lowercase letters and numbers
-func ValidateServiceName(name string) error {
+func validateServiceName(name string) error {
 	if name == "" {
 		return fmt.Errorf("service name is empty")
-	} else if !regexp.MustCompile(`^[a-z0-9]*$`).MatchString(name) {
-		return fmt.Errorf("service name can only contain lowercase letters and numbers")
+	}
+	if !regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`).MatchString(name) {
+		return fmt.Errorf("service name can only contain lowercase letters and numbers and hyphens and must start and end with a letter")
 	}
 
 	return nil
 }
 
 // A service author can only contain letters and numbers
-func ValidateServiceAuthor(author string) error {
+func validateServiceAuthor(author string) error {
 	if author == "" {
 		return fmt.Errorf("service author is empty")
-	} else if !regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString(author) {
-		return fmt.Errorf("service author can only contain letters and numbers")
+	}
+	if !regexp.MustCompile(`^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*$`).MatchString(author) {
+		return fmt.Errorf("service author can only contain letters and numbers and hyphens and must start and end with a letter")
 	}
 
 	return nil
 }
 
 // A service source should not include a scheme and should be a valid URL
-func ValidateServiceSource(source string) error {
-	return nil // todo
+func validateServiceSource(source string) error {
+	return validateSource(source)
 }
 
 // A service version should be a valid semantic version
-func ValidateServiceVersion(version string) error {
+func validateServiceVersion(version string) error {
 	_, err := semver.NewVersion(version)
 	return err
 }
@@ -52,10 +54,17 @@ func (option ServiceOption) validate() error {
 		if option.Value == "" {
 			return fmt.Errorf("option '%s' has type string, but no value was set", option.Name)
 		}
+		if option.valueType != "string" {
+			return fmt.Errorf("option '%s' has type string, but was set to '%s'", option.Name, option.valueType)
+		}
 	case int:
-		// no checks needed
+		if option.valueType != "int" {
+			return fmt.Errorf("option '%s' has type int, but was set to '%s'", option.Name, option.valueType)
+		}
 	case float64:
-		// no checks needed
+		if option.valueType != "float" {
+			return fmt.Errorf("option '%s' has type float, but was set to '%s'", option.Name, option.valueType)
+		}
 	default:
 		return fmt.Errorf("option '%s' has an invalid type: %T", option.Name, option.Value)
 	}
@@ -82,10 +91,24 @@ func (service Service) validateOptions() error {
 	return nil
 }
 
+func (c ServiceCommands) validate() error {
+	// Run command must not be empty
+	if c.Run == "" {
+		return fmt.Errorf("run command is empty, do not know how to execute this service")
+	}
+
+	return nil
+}
+
 func (input ServiceInput) validate() error {
 	// Name not empty?
-	if input.Service == "" {
-		return fmt.Errorf("input name is empty")
+	err := validateServiceName(input.Service)
+	if err != nil {
+		return err
+	}
+
+	if input.Author != "" {
+		return validateServiceAuthor(input.Author)
 	}
 
 	// All streams unique?
@@ -134,19 +157,24 @@ func (service Service) validateOutputs() error {
 
 // Check if a parsed service definition is valid and can be used for service discovery
 func (service Service) validate() error {
-	err := ValidateServiceName(service.Name)
+	err := validateServiceName(service.Name)
 	if err != nil {
 		return err
 	}
-	err = ValidateServiceAuthor(service.Author)
+	err = validateServiceAuthor(service.Author)
 	if err != nil {
 		return err
 	}
-	err = ValidateServiceSource(service.Source)
+	err = validateServiceSource(service.Source)
 	if err != nil {
 		return err
 	}
-	err = ValidateServiceVersion(service.Version)
+	err = validateServiceVersion(service.Version)
+	if err != nil {
+		return err
+	}
+
+	err = service.Commands.validate()
 	if err != nil {
 		return err
 	}

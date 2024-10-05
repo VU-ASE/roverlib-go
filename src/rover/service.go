@@ -3,23 +3,33 @@ package rover
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 // Configuration of a Rover service as defined in a service.yaml file
 type Service struct {
-	Name    string          `yaml:"name"`
-	Author  string          `yaml:"author"`
-	Source  string          `yaml:"source"`
-	Version string          `yaml:"version"`
-	Inputs  []ServiceInput  `yaml:"inputs"`
-	Outputs []string        `yaml:"outputs"`
-	Options []ServiceOption `yaml:"configuration"`
+	Name     string          `yaml:"name"`
+	Author   string          `yaml:"author"`
+	Source   string          `yaml:"source"`
+	Version  string          `yaml:"version"`
+	Inputs   []ServiceInput  `yaml:"inputs"`
+	Outputs  []string        `yaml:"outputs"`
+	Options  []ServiceOption `yaml:"configuration"`
+	Commands ServiceCommands `yaml:"commands"`
+}
+
+type ServiceCommands struct {
+	Build string `yaml:"build"` // optional
+	Run   string `yaml:"run"`
 }
 
 type ServiceInput struct {
 	Service string   `yaml:"service"`
+	Author  string   // This is not explicitly defined in the YAML file, but users can specify a name like vu-ase/imaging
 	Streams []string `yaml:"streams"`
 }
 
@@ -38,14 +48,73 @@ func ParseService(content []byte) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Make sure to split the author from the name if it is specified
+	for _, input := range service.Inputs {
+		parts := strings.Split(input.Service, "/")
+		if len(parts) == 2 {
+			service.Author = parts[0]
+			input.Service = parts[1]
+		}
+	}
+
 	err = service.validate()
 	return service, err
 }
 
-// Parse a service.yaml from a file path
+// Parse a service.yaml from a file path. This path can either be a yaml file or a directory containing a service.yaml file
+// if a directory contains multiple service.yaml files, one must be explicitly specified,
+// It will only look in the root of the directory and not recurse into subdirectories
 func ParseServiceFrom(path string) (*Service, error) {
+	yamlPath := path
+
+	// Is the path a directory?
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	if info.IsDir() {
+		// Check if the directory contains files matching the service*.yaml pattern
+		files, err := os.ReadDir(path)
+		if err != nil {
+			return nil, err
+		}
+		matches := []string{}
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+
+			// Pattern explanation: `(?i)` makes the pattern case insensitive,
+			// `^service.*\.yaml$` matches strings starting with "service",
+			// followed by any number of characters, and ending with ".yaml".
+			pattern := `(?i)^service.*\.yaml$`
+			matched, err := regexp.MatchString(pattern, file.Name())
+			if err != nil {
+				return nil, err
+			}
+			if matched {
+				matches = append(matches, yamlPath)
+			}
+		}
+
+		if len(matches) == 0 {
+			return nil, fmt.Errorf("no service.yaml file found in directory: %s. Specify an explicit path to a service.yaml or make sure to include a service.yaml in this directory.", path)
+		}
+		if len(matches) > 1 {
+			str := matches[0]
+			for _, match := range matches[1:] {
+				str += ", " + match
+			}
+
+			return nil, fmt.Errorf("multiple service.yaml files found in directory: %s. Specify an explicit path to a service.yaml or remove the service.yaml files that you don't use. Found: %s", path, str)
+		}
+
+		yamlPath = filepath.Join(path, matches[0])
+	}
+
 	// Read the file
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(yamlPath)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +155,20 @@ func (opt *ServiceOption) UnmarshalYAML(unmarshal func(interface{}) error) error
 			return err
 		}
 		opt.Value = f
+	case "":
+		// Autodetect the type
+		switch temp.Value.(type) {
+		case string:
+			temp.Type = "string"
+		case int:
+			temp.Type = "int"
+		case float64:
+			temp.Type = "float"
+		default:
+			return fmt.Errorf("unsupported autoparse type: %T", temp.Value)
+		}
 	default:
-		return fmt.Errorf("unsupported type: %s", temp.Type)
+		return fmt.Errorf("unsupported explicit type: %s", temp.Type)
 	}
 
 	return nil

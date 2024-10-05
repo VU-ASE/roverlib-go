@@ -19,6 +19,7 @@ type DownloadedService struct {
 	Name    string `yaml:"name"`
 	Source  string `yaml:"source"`
 	Version string `yaml:"version"`
+	Sha     string `yaml:"sha"` // optional
 }
 
 func (c *Config) Enable(path string) {
@@ -69,13 +70,15 @@ func (c *Config) HasEnabled(path string) bool {
 func ParseConfig(content []byte) (*Config, error) {
 	config := &Config{}
 	err := yaml.Unmarshal(content, config)
-
+	if err != nil {
+		return nil, err
+	}
+	err = config.validate()
 	return config, err
 }
 
 // Parse a rover.yaml from a file path
 func ParseConfigFrom(path string) (*Config, error) {
-	// Read the file
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

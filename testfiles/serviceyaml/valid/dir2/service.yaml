@@ -4,7 +4,6 @@ source: github.com/vu-ase/example-service
 version: 1.0.0
 
 commands:
-  build: make build 
   run: ./example-service
 
 inputs:

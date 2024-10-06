@@ -5,7 +5,7 @@ version: 1.0.0
 
 commands:
   build: make build 
-  run: ./example-service
+  # missing run command
 
 inputs:
   - service: imaging

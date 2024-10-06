@@ -9,9 +9,7 @@ commands:
 
 inputs:
   - service: imaging
-    streams:
-      - track
-      - debug
+    streams: # this service has no streams
   - service: controller
     streams:
       - decision

@@ -47,6 +47,9 @@ func (option ServiceOption) validate() error {
 	if option.Name == "" {
 		return fmt.Errorf("option name is empty")
 	}
+	if !regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`).MatchString(option.Name) {
+		return fmt.Errorf("option name can only contain lowercase letters and numbers and hyphens and must start and end with a letter")
+	}
 
 	// type is one of string, int, float, check if a value was set
 	switch option.Value.(type) {
@@ -118,6 +121,11 @@ func (input ServiceInput) validate() error {
 				return fmt.Errorf("duplicate input stream '%s' for service '%s'", stream, input.Service)
 			}
 		}
+	}
+
+	// Is there at least one stream?
+	if len(input.Streams) < 1 {
+		return fmt.Errorf("no input streams defined for service '%s'", input.Service)
 	}
 
 	return nil

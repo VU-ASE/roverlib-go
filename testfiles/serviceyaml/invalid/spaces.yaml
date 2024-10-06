@@ -1,4 +1,4 @@
-name: example-service
+name: example service # service name is invalid
 author: vu-ase
 source: github.com/vu-ase/example-service
 version: 1.0.0

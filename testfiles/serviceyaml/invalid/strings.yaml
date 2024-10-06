@@ -21,8 +21,10 @@ outputs:
   - debugdata
 
 configuration:
-  - name: speed
+  - name: speed- # invalid name, should end with a letter or number
     value: 1.0
+  - name: spEEd
+    value: 2.0
   - name: ki
     value: 123
     tunable: true 

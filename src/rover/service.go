@@ -29,7 +29,7 @@ type ServiceCommands struct {
 
 type ServiceInput struct {
 	Service string   `yaml:"service"`
-	Author  string   // This is not explicitly defined in the YAML file, but users can specify a name like vu-ase/imaging
+	Author  string   // This is not explicitly defined in the YAML file, but users can specify a name like vu-ase/imaging, which will be split into Author: vu-ase and Service: imaging
 	Streams []string `yaml:"streams"`
 }
 
@@ -50,12 +50,29 @@ func ParseService(content []byte) (*Service, error) {
 	}
 
 	// Make sure to split the author from the name if it is specified
-	for _, input := range service.Inputs {
+	for i, input := range service.Inputs {
 		parts := strings.Split(input.Service, "/")
 		if len(parts) == 2 {
-			service.Author = parts[0]
-			input.Service = parts[1]
+			service.Inputs[i].Author = parts[0]
+			service.Inputs[i].Service = parts[1]
 		}
+	}
+
+	// Make sure to set all values to lowercase values (except configuration options)
+	service.Name = strings.ToLower(service.Name)
+	service.Author = strings.ToLower(service.Author)
+	for i, input := range service.Inputs {
+		service.Inputs[i].Service = strings.ToLower(input.Service)
+		service.Inputs[i].Author = strings.ToLower(input.Author)
+		for j, stream := range input.Streams {
+			service.Inputs[i].Streams[j] = strings.ToLower(stream)
+		}
+	}
+	for i, output := range service.Outputs {
+		service.Outputs[i] = strings.ToLower(output)
+	}
+	for i, option := range service.Options {
+		service.Options[i].Name = strings.ToLower(option.Name)
 	}
 
 	err = service.validate()
@@ -80,21 +97,21 @@ func ParseServiceFrom(path string) (*Service, error) {
 			return nil, err
 		}
 		matches := []string{}
+
+		// Pattern explanation: `(?i)` makes the pattern case insensitive,
+		// `^service.*\.yaml$` matches strings starting with "service",
+		// followed by any number of characters, and ending with ".yaml".
+		pattern := `(?i)^service.*\.yaml$`
+		regexp := regexp.MustCompile(pattern)
+
 		for _, file := range files {
 			if file.IsDir() {
 				continue
 			}
 
-			// Pattern explanation: `(?i)` makes the pattern case insensitive,
-			// `^service.*\.yaml$` matches strings starting with "service",
-			// followed by any number of characters, and ending with ".yaml".
-			pattern := `(?i)^service.*\.yaml$`
-			matched, err := regexp.MatchString(pattern, file.Name())
-			if err != nil {
-				return nil, err
-			}
+			matched := regexp.MatchString(file.Name())
 			if matched {
-				matches = append(matches, yamlPath)
+				matches = append(matches, file.Name())
 			}
 		}
 
@@ -110,7 +127,7 @@ func ParseServiceFrom(path string) (*Service, error) {
 			return nil, fmt.Errorf("multiple service.yaml files found in directory: %s. Specify an explicit path to a service.yaml or remove the service.yaml files that you don't use. Found: %s", path, str)
 		}
 
-		yamlPath = filepath.Join(path, matches[0])
+		yamlPath = filepath.Join(path, filepath.Base(matches[0]))
 	}
 
 	// Read the file
@@ -125,6 +142,7 @@ func ParseServiceFrom(path string) (*Service, error) {
 func (opt *ServiceOption) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// Temporary structure to unmarshal the type and raw value
 	var temp struct {
+		Name  string      `yaml:"name"`
 		Type  string      `yaml:"type"`
 		Value interface{} `yaml:"value"`
 	}
@@ -134,7 +152,7 @@ func (opt *ServiceOption) UnmarshalYAML(unmarshal func(interface{}) error) error
 		return err
 	}
 
-	opt.valueType = temp.Type
+	opt.Name = temp.Name
 	// Dynamically unmarshal based on the type
 	switch temp.Type {
 	case "string":
@@ -157,6 +175,7 @@ func (opt *ServiceOption) UnmarshalYAML(unmarshal func(interface{}) error) error
 		opt.Value = f
 	case "":
 		// Autodetect the type
+		opt.Value = temp.Value
 		switch temp.Value.(type) {
 		case string:
 			temp.Type = "string"
@@ -170,6 +189,7 @@ func (opt *ServiceOption) UnmarshalYAML(unmarshal func(interface{}) error) error
 	default:
 		return fmt.Errorf("unsupported explicit type: %s", temp.Type)
 	}
+	opt.valueType = temp.Type
 
 	return nil
 }

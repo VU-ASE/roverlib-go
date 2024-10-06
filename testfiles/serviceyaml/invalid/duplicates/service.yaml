@@ -15,6 +15,9 @@ inputs:
   - service: controller
     streams:
       - decision
+  # - service: vu-ase/actuator
+  #   streams:
+  #     - decision
     
 outputs:
   - trajectory

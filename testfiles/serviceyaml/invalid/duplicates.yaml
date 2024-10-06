@@ -23,6 +23,8 @@ outputs:
 configuration:
   - name: speed
     value: 1.0
+  - name: spEEd # this is a duplicate, because names are case-insensitive
+    value: 2.0
   - name: ki
     value: 123
     tunable: true 

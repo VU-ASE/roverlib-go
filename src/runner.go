@@ -14,6 +14,7 @@ import (
 
 	pb_core_messages "github.com/VU-ASE/rovercom/packages/go/core"
 	"github.com/VU-ASE/roverlib/src/rover"
+	"github.com/VU-ASE/roverlib/src/runner"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -83,7 +84,7 @@ func setupLogging(debug bool, outputPath string, service rover.Service) {
 }
 
 // Used to start the program with the correct arguments and logging, with service discovery registration and all dependencies resolved
-func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTerminate TerminationFunction, disableRegistration bool) {
+func Run(main MainCallback, onTuningState OnTuningStateCallback, onTerminate TerminationCallback, disableRegistration bool) {
 	// Parse args
 	debug := flag.Bool("debug", false, "show all logs (including debug)")
 	output := flag.String("output", "", "path of the output file to log to")
@@ -102,12 +103,11 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 
 		// Callback to the service
 		onTerminate(sig)
-
 		os.Exit(0)
 	}()
 
 	// Parse the service definition
-	service, err := parseServiceDefinitionFromYaml(*serviceYamlPath)
+	service, err := rover.ParseServiceFrom(*serviceYamlPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			log.Fatal().Err(err).Msg("Could not open service definition YAML. Use the -service-yaml flag to specify the path to the service definition YAML file")
@@ -117,14 +117,14 @@ func Run(main MainFunction, onTuningState TuningStateCallbackFunction, onTermina
 	}
 
 	// Set up logging
-	setupLogging(*debug, *output, service)
+	setupLogging(*debug, *output, *service)
 
 	// Try registering the service with the core
-	resolvedDependencies := make([]ResolvedDependency, 0)
+	inputs := make([]runner.ServiceInput, 0)
 
 	// The address on which to send requests to the core
 	// will be filled in according to the environment variable
-	sysmanInfo := CoreInfo{
+	sysmanInfo := runner.CoreInfo{
 		RepReqAddress:    "",
 		BroadcastAddress: "",
 	}

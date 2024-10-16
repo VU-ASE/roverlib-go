@@ -2,6 +2,7 @@ package rover
 
 import (
 	"os"
+	"path/filepath"
 	"slices"
 
 	"gopkg.in/yaml.v3"
@@ -73,7 +74,13 @@ func ParseConfig(content []byte) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = config.validate()
+
+	// Make sure all paths are minimal
+	for i, path := range config.Enabled {
+		config.Enabled[i] = filepath.Clean(path)
+	}
+
+	err = config.Validate()
 	return config, err
 }
 

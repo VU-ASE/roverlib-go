@@ -164,7 +164,7 @@ func (service Service) validateOutputs() error {
 }
 
 // Check if a parsed service definition is valid and can be used for service discovery
-func (service Service) validate() error {
+func (service Service) Validate() error {
 	err := validateServiceName(service.Name)
 	if err != nil {
 		return err

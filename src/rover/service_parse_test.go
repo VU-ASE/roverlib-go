@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testfilesLocation = "../../testfiles/serviceyaml"
+const serviceTestfilesBase = testfilesLocation + "serviceyaml"
 
 //
 // Basic tests for the validate functions
@@ -203,9 +203,9 @@ func TestValidateOption(t *testing.T) {
 // Test for yaml validation from files and directories
 //
 
-func TestValidateFilesValid(t *testing.T) {
+func TestValidateServiceFilesValid(t *testing.T) {
 	// Read all files and folders in the root directory
-	dir := filepath.Join(testfilesLocation, "valid")
+	dir := filepath.Join(serviceTestfilesBase, "valid")
 
 	// Get all files and folders in the directory
 	files, err := os.ReadDir(dir)
@@ -222,9 +222,9 @@ func TestValidateFilesValid(t *testing.T) {
 	}
 }
 
-func TestValidateFilesInvalid(t *testing.T) {
+func TestValidateServiceFilesInvalid(t *testing.T) {
 	// Read all files and folders in the root directory
-	dir := filepath.Join(testfilesLocation, "invalid")
+	dir := filepath.Join(serviceTestfilesBase, "invalid")
 
 	// Get all files and folders in the directory
 	files, err := os.ReadDir(dir)

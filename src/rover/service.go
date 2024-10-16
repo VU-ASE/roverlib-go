@@ -75,7 +75,7 @@ func ParseService(content []byte) (*Service, error) {
 		service.Options[i].Name = strings.ToLower(option.Name)
 	}
 
-	err = service.validate()
+	err = service.Validate()
 	return service, err
 }
 

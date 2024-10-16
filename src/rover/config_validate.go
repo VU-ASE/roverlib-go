@@ -13,11 +13,12 @@ func validateConfigEnabledService(path string) error {
 		return fmt.Errorf("enabled path is empty")
 	}
 
-	if regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`).MatchString(path) {
-		return nil
+	// Can only contain alphanumeric characters, hyphens, underscores, dots and slashes
+	if !regexp.MustCompile(`^[a-zA-Z0-9\-_\.\/]+$`).MatchString(path) {
+		return fmt.Errorf("enabled path can only contain alphanumeric characters, hyphens, underscores, dots and slashes")
 	}
 
-	return fmt.Errorf("enabled path can only contain alphanumeric characters, hyphens and underscores")
+	return nil
 }
 
 func (s DownloadedService) validate() error {
@@ -49,7 +50,7 @@ func (s DownloadedService) validate() error {
 	return nil
 }
 
-func (c Config) validate() error {
+func (c Config) Validate() error {
 	for _, s := range c.Downloaded {
 		if err := s.validate(); err != nil {
 			return err
@@ -60,6 +61,15 @@ func (c Config) validate() error {
 		if err := validateConfigEnabledService(path); err != nil {
 			return err
 		}
+	}
+
+	// Check all enabled paths are unique
+	enabled := make(map[string]struct{})
+	for _, path := range c.Enabled {
+		if _, ok := enabled[path]; ok {
+			return fmt.Errorf("enabled path '%s' is not unique", path)
+		}
+		enabled[path] = struct{}{}
 	}
 
 	return nil

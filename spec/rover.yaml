@@ -18,8 +18,8 @@ downloaded:
 
 # Paths to service folders that are enabled
 # These folders should have a service.yaml file in them
-# If there are multiple service yamls (service.ysml, service1.yaml, service2.yaml), one must explicitly be chosen
+# If there are multiple service yamls (service.yaml, service1.yaml, service2.yaml), one must explicitly be chosen
 enabled:
   - /home/debix/.rover/services/imaging
   - /home/debix/.rover/services/controller
-  - /home/debix/.rover/services/actuator
+  - /home/debix/.rover/services/actuator/service2.yaml

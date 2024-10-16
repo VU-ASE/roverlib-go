@@ -22,6 +22,10 @@ inputs:
   - service: controller
     streams:
       - decision
+  # For extra checks at runtime, you may also specify the author of the service like so:
+  - service: vu-ase/actuator
+    streams:
+      - decision
     
 # The names of the streams that this service will produce
 outputs:

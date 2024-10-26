@@ -1,0 +1,25 @@
+# Template for the rover configuration file, as parsed by the ASE roverlib and rovertui tools.
+# it allows you to define the services you use in your pipeline and keep track of all downloaded services so far
+
+# These services are downloaded from a remote repository
+# This information can be used to replicate a certain pipeline easily
+downloaded:
+  - name: imaging
+    source: https://github.com/vu-ase/imaging
+    version: 1.0.0
+  - name: controller
+    source: https://github.com/vu-ase/imaging
+    version: 1.0.0
+  - name: actuator
+    source: https://github.com/vu-ase/actuator
+    version: 1.0.0
+    # optionally you can specify a SHA hash to ensure the correct version is downloaded
+    sha: 1234567890abcdef1234567890abcdef12345678
+
+# Paths to service folders that are enabled
+# These folders should have a service.yaml file in them
+# If there are multiple service yamls (service.yaml, service1.yaml, service2.yaml), one must explicitly be chosen
+enabled:
+  - /home/debix/.rover/services/imaging
+  - /home/debix/.rover/services/controller
+  - /home/debix/.rover/services/actuator/service2.yaml

@@ -1,0 +1,12 @@
+# Users can have nothing enabled but have services downloaded
+downloaded: 
+  - name: imaging
+    source: github.com/test/imaging
+    version: 1.0.0
+  - name: controller
+    source: github.com/test/controller
+    version: 1.0.0
+  - name: actuator
+    source: github.com/test/actuator
+    version: 1.0.0
+enabled: []

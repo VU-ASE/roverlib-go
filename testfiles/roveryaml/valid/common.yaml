@@ -1,0 +1,16 @@
+downloaded: 
+  - name: imaging
+    source: github.com/test/imaging
+    version: 1.0.0
+    sha: 6655bc3b15eecaeae30114abf310fb88bfd19e0e49ea9aa5f6cd50af26005397
+  - name: controller
+    source: github.com/test/controller
+    version: 1.0.0
+    sha: 6efb4f768e67c23f1e4c98ebed0efca7a95d26e3a89e7e0687df53881e0b93d7
+  - name: actuator
+    source: github.com/test/actuator
+    version: 1.0.0
+enabled: 
+  - /home/debix/.rover/services/imaging
+  - /home/debix/.rover/services/controller
+  - /home/debix/.rover/services/actuator/service2.yaml

@@ -1,4 +1,3 @@
 # roverlib
 
-To use this package, view its docs [here](https://docs.ase.vu.nl/docs/framework/packages/roverlib/)
-
+Building a service that runs on the rover? Then you'll need the roverlib.

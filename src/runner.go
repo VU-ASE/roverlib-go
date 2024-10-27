@@ -19,7 +19,7 @@ import (
 // this struct is used to store the addresses of these endpoints
 
 // Configures log level and output
-func setupLogging(debug bool, outputPath string, service InjectedService) {
+func setupLogging(debug bool, outputPath string, service Service) {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
 	// Set up custom caller prefix
 	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
@@ -97,7 +97,7 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 		log.Fatal().Msg("No service definition found in environment variable ASE_SERVICE. Are you sure that this service is started by roverd?")
 	}
 
-	service, err := UnmarshalInjectedService([]byte(definition))
+	service, err := UnmarshalService([]byte(definition))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error unmarshalling service definition")
 	}

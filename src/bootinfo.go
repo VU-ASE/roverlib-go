@@ -1,8 +1,8 @@
 // This file was generated from JSON Schema using quicktype, do not modify it directly.
 // To parse and unparse this JSON data, add this code to your project and do:
 //
-//    injectedService, err := UnmarshalInjectedService(bytes)
-//    bytes, err = injectedService.Marshal()
+//    service, err := UnmarshalService(bytes)
+//    bytes, err = service.Marshal()
 
 package roverlib
 
@@ -12,19 +12,19 @@ import (
 	"errors"
 )
 
-func UnmarshalInjectedService(data []byte) (InjectedService, error) {
-	var r InjectedService
+func UnmarshalService(data []byte) (Service, error) {
+	var r Service
 	err := json.Unmarshal(data, &r)
 	return r, err
 }
 
-func (r *InjectedService) Marshal() ([]byte, error) {
+func (r *Service) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
 // The object that injected into a rover process by roverd and then parsed by roverlib to be
 // made available for the user process
-type InjectedService struct {
+type Service struct {
 	Configuration []Configuration `json:"configuration"`
 	// The resolved input dependencies
 	Inputs []Input `json:"inputs"`

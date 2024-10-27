@@ -20,7 +20,7 @@ type ServiceConfiguration struct {
 	lock *sync.RWMutex
 }
 
-func NewServiceConfiguration(service InjectedService) *ServiceConfiguration {
+func NewServiceConfiguration(service Service) *ServiceConfiguration {
 	config := &ServiceConfiguration{
 		intOptions:    make(map[string]int),
 		floatOptions:  make(map[string]float64),

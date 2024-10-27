@@ -6,6 +6,7 @@ package roverlib
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -18,6 +19,8 @@ type ServiceConfiguration struct {
 	tunable       map[string]bool
 	// For concurrency control
 	lock *sync.RWMutex
+	// Prevent late updates
+	lastUpdate uint64 // timestamp
 }
 
 func NewServiceConfiguration(service Service) *ServiceConfiguration {
@@ -25,6 +28,8 @@ func NewServiceConfiguration(service Service) *ServiceConfiguration {
 		intOptions:    make(map[string]int),
 		floatOptions:  make(map[string]float64),
 		stringOptions: make(map[string]string),
+		tunable:       make(map[string]bool),
+		lastUpdate:    uint64(time.Now().UnixMilli()),
 	}
 
 	for _, c := range service.Configuration {
@@ -107,8 +112,11 @@ func (c *ServiceConfiguration) GetStringSafe(name string) (string, error) {
 // Methods for internal use
 //
 
-// Set the integer value of the configuration option with the given name (not thread-safe)
+// Set the integer value of the configuration option with the given name (thread-safe)
 func (c *ServiceConfiguration) setInt(name string, value int) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	if c.tunable[name] {
 		c.intOptions[name] = value
 		log.Debug().Str("name", name).Int("value", value).Msg("Set integer configuration option")
@@ -116,15 +124,12 @@ func (c *ServiceConfiguration) setInt(name string, value int) {
 		log.Debug().Str("name", name).Msg("Attempted to set non-tunable integer configuration option")
 	}
 }
-func (c *ServiceConfiguration) setIntSafe(name string, value int) {
+
+// Set the float value of the configuration option with the given name (thread-safe)
+func (c *ServiceConfiguration) setFloat(name string, value float64) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	c.setInt(name, value)
-}
-
-// Set the float value of the configuration option with the given name (not thread-safe)
-func (c *ServiceConfiguration) setFloat(name string, value float64) {
 	if c.tunable[name] {
 		c.floatOptions[name] = value
 		log.Debug().Str("name", name).Float64("value", value).Msg("Set float configuration option")
@@ -132,25 +137,16 @@ func (c *ServiceConfiguration) setFloat(name string, value float64) {
 		log.Debug().Str("name", name).Msg("Attempted to set non-tunable float configuration option")
 	}
 }
-func (c *ServiceConfiguration) setFloatSafe(name string, value float64) {
+
+// Set the string value of the configuration option with the given name (thread-safe)
+func (c *ServiceConfiguration) setString(name string, value string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	c.setFloat(name, value)
-}
-
-// Set the string value of the configuration option with the given name (not thread-safe)
-func (c *ServiceConfiguration) setString(name string, value string) {
 	if c.tunable[name] {
 		c.stringOptions[name] = value
 		log.Debug().Str("name", name).Str("value", value).Msg("Set string configuration option")
 	} else {
 		log.Debug().Str("name", name).Msg("Attempted to set non-tunable string configuration option")
 	}
-}
-func (c *ServiceConfiguration) setStringSafe(name string, value string) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	c.setString(name, value)
 }

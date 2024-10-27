@@ -10,9 +10,11 @@ import (
 
 	build_debug "runtime/debug"
 
+	rovercom "github.com/VU-ASE/rovercom/packages/go/core"
 	"github.com/pebbe/zmq4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/proto"
 )
 
 // The core exposes two endpoints: a pub/sub endpoint for broadcasting service registration and a req/rep endpoint for registering services and resolving dependencies
@@ -127,13 +129,40 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 			}
 			for {
 				// Receive new configuration, and update this in the shared configuration
-				_, err := socket.Recv(0) // _ = res
+				res, err := socket.Recv(0)
 				if err != nil {
 					log.Err(err).Msg("Failed to receive tuning values")
 					continue
 				}
 
-				// todo: use RES!
+				// Convert from over-the-wire format to Go struct, using protobuf
+				var tuning rovercom.TuningState
+				err = proto.Unmarshal([]byte(res), &tuning)
+				if err != nil {
+					log.Err(err).Msg("Failed to unmarshal tuning values")
+					continue
+				}
+
+				// Is the timestamp later than the last update?
+				if tuning.Timestamp <= configuration.lastUpdate {
+					log.Debug().Msg("No new tuning values")
+					continue
+				}
+
+				// Update the configuration (setX will ignore values that are not tunable)
+				for _, p := range tuning.DynamicParameters {
+					// This is certainly not pretty, but unions are not straightforward in Go
+					if p.GetInt() != nil {
+						configuration.setInt(p.GetInt().Key, int(p.GetInt().Value))
+					} else if p.GetFloat() != nil {
+						configuration.setFloat(p.GetFloat().Key, float64(p.GetFloat().Value))
+					} else if p.GetString_() != nil {
+						configuration.setString(p.GetString_().Key, p.GetString_().Value)
+					} else {
+						log.Warn().Msg("Unknown tuning value type")
+					}
+				}
+
 			}
 		}()
 	}

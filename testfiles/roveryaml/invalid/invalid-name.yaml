@@ -1,7 +1,0 @@
-downloaded:
-  - name: imaging module
-    source: github.com/test/imaging
-    version: 1.0.0
-
-enabled:
-  - /home/debix/.rover/services/imaging

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/VU-ASE/roverlib-go/compare/v1.1.0...v1.1.1) (2024-11-30)
+
+
+### Bug Fixes
+
+* release new version to avoid checksum mismatch ([ed4c421](https://github.com/VU-ASE/roverlib-go/commit/ed4c4212e8a5f3c9e93f1307333114b59934b482))
+
 ## [1.1.0](https://github.com/VU-ASE/roverlib-go/compare/v1.0.3...v1.1.0) (2024-11-30)
 
 

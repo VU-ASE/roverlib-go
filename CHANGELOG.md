@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/VU-ASE/roverlib-go/compare/v1.0.3...v1.1.0) (2024-11-30)
+
+
+### Features
+
+* added input/output stream functionality based on rovercom ([73bb808](https://github.com/VU-ASE/roverlib-go/commit/73bb808f3c4651121d14daa838988ccef2dc0f67))
+* base implementation of roverlib in the roverd system ([3a38afd](https://github.com/VU-ASE/roverlib-go/commit/3a38afde081633febe2828797fe265205739550b))
+* implement tuning updates ([7c4d34b](https://github.com/VU-ASE/roverlib-go/commit/7c4d34baed8de8c1245761bcb5968cd1b66e58d0))
+* parsing rover/service yamls and validation + validation setup ([e17b173](https://github.com/VU-ASE/roverlib-go/commit/e17b173c9a8dda2c497a8de71411b284e2acf265))
+* release roverlib as roverlib-go ([d6d8c47](https://github.com/VU-ASE/roverlib-go/commit/d6d8c47591d89d78772e5a3383632261c013b306))
+* service.yaml parsing and testing ([dee2933](https://github.com/VU-ASE/roverlib-go/commit/dee2933c400a9ba7e2d48417b5d286d42fe5b03c))
+* switch to devcontainer-based approach ([c10c245](https://github.com/VU-ASE/roverlib-go/commit/c10c2456be6abda30e915aa752715f02363a52f2))
+
 ## [1.0.3](https://github.com/VU-ASE/roverlib/compare/v1.0.2...v1.0.3) (2024-07-29)
 
 

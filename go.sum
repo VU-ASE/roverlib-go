@@ -1,5 +1,7 @@
 github.com/VU-ASE/rovercom v1.1.0 h1:qTwEz0Ijy0byE6DEgLVMEeYpEsAMlCjECGdrknfWtQA=
 github.com/VU-ASE/rovercom v1.1.0/go.mod h1:1T9bXpOPMMkubm6YBa847vseBRALFzq8lkDx96w0Hr8=
+github.com/VU-ASE/rovercom v1.2.1 h1:iqD6yagKCMnGDtR2F8y8O6NcWkyBRHJkjQOQPM8lS/s=
+github.com/VU-ASE/rovercom v1.2.1/go.mod h1:1T9bXpOPMMkubm6YBa847vseBRALFzq8lkDx96w0Hr8=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=

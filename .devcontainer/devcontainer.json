@@ -1,5 +1,5 @@
 {
-    "name": "ASE-roverlibgo",
+    "name": "ASE-roverlib-go",
     "build": {
         "dockerfile": "Dockerfile"
     },

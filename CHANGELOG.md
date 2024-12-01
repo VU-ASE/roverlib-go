@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/VU-ASE/roverlib-go/compare/v1.1.4...v1.1.5) (2024-12-01)
+
+
+### Bug Fixes
+
+* initialize mutex before making configuration accessible ([5016754](https://github.com/VU-ASE/roverlib-go/commit/501675451ac67cba1d7c5edd5969ece25f7932f1))
+
 ## [1.1.4](https://github.com/VU-ASE/roverlib-go/compare/v1.1.3...v1.1.4) (2024-12-01)
 
 

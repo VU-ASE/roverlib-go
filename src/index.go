@@ -96,12 +96,12 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 	// Fetch and parse service definition as injected by roverd
 	definition := os.Getenv("ASE_SERVICE")
 	if definition == "" {
-		log.Fatal().Msg("No service definition found in environment variable ASE_SERVICE. Are you sure that this service is started by roverd?")
+		panic("No service definition found in environment variable ASE_SERVICE. Are you sure that this service is started by roverd?")
 	}
 
 	service, err := UnmarshalService([]byte(definition))
 	if err != nil {
-		log.Fatal().Err(err).Msg("Error unmarshalling service definition")
+		panic(err)
 	}
 
 	// Enable logging using zerolog

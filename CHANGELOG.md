@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/VU-ASE/roverlib-go/compare/v1.1.3...v1.1.4) (2024-12-01)
+
+
+### Bug Fixes
+
+* more descriptive env var parsing errors ([c3de3d6](https://github.com/VU-ASE/roverlib-go/commit/c3de3d688807cc1eb0affa1fc2a0517bea55b20d))
+
 ## [1.1.3](https://github.com/VU-ASE/roverlib-go/compare/v1.1.2...v1.1.3) (2024-12-01)
 
 

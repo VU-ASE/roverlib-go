@@ -29,6 +29,7 @@ func NewServiceConfiguration(service Service) *ServiceConfiguration {
 		floatOptions:  make(map[string]float64),
 		stringOptions: make(map[string]string),
 		tunable:       make(map[string]bool),
+		lock:          &sync.RWMutex{},
 		lastUpdate:    uint64(time.Now().UnixMilli()),
 	}
 

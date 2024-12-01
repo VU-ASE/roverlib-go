@@ -71,9 +71,15 @@ func setupLogging(debug bool, outputPath string, service Service) {
 // Start the program (main) and handle termination
 func Run(main MainCallback, onTerminate TerminationCallback) {
 	// Parse args
-	debug := flag.Bool("debug", false, "show all logs (including debug)")
-	output := flag.String("output", "", "path of the output file to log to")
-	flag.Parse()
+	defaultDebug := false
+	defaultOutput := ""
+	debug := &defaultDebug
+	output := &defaultOutput
+	if !flag.Parsed() {
+		debug = flag.Bool("debug", defaultDebug, "show all logs (including debug)")
+		output = flag.String("output", defaultOutput, "path of the output file to log to")
+		flag.Parse()
+	}
 
 	// Catch sigterm in a goroutine
 	go func() {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/VU-ASE/roverlib-go/compare/v1.1.2...v1.1.3) (2024-12-01)
+
+
+### Bug Fixes
+
+* use `panic` instead of `log` before logging is set up ([010e25e](https://github.com/VU-ASE/roverlib-go/commit/010e25e27e38b03b287bacaa4b9e570e6c4bf9af))
+
 ## [1.1.2](https://github.com/VU-ASE/roverlib-go/compare/v1.1.1...v1.1.2) (2024-11-30)
 
 

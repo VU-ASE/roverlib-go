@@ -101,7 +101,7 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 
 	service, err := UnmarshalService([]byte(definition))
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("Failed to unmarshal service definition in ASE_SERVICE: %w", err))
 	}
 
 	// Enable logging using zerolog

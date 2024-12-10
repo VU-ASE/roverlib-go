@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/VU-ASE/roverlib-go/compare/v1.1.5...v1.1.6) (2024-12-10)
+
+
+### Bug Fixes
+
+* bind instead of connect on write stream, typestate pattern ([633c3b0](https://github.com/VU-ASE/roverlib-go/commit/633c3b011fa2d9f4c81c123eaab53cbba10ef659))
+
 ## [1.1.5](https://github.com/VU-ASE/roverlib-go/compare/v1.1.4...v1.1.5) (2024-12-01)
 
 

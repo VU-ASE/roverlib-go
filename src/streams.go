@@ -15,9 +15,10 @@ import (
 )
 
 // Map of all already handed out streams to the user program (to preserve singletons)
-var streams = make(map[string]*ServiceStream)
+var writeStreams = make(map[string]*WriteStream)
+var readStreams = make(map[string]*ReadStream)
 
-type ServiceStream struct {
+type serviceStream struct {
 	// The socket that this stream is connected to
 	address  string       // zmq address
 	socket   *zmq4.Socket // can be nil, when lazy loading
@@ -26,11 +27,19 @@ type ServiceStream struct {
 	bytes int
 }
 
+type WriteStream struct {
+	stream serviceStream
+}
+
+type ReadStream struct {
+	stream serviceStream
+}
+
 // Get a stream that you can write to (i.e. an output stream).
 // This function panics if the stream does not exist, because fetching a non-existent stream should always terminate to avoid undefined behavior.
-func (s *Service) GetWriteStream(name string) *ServiceStream {
+func (s *Service) GetWriteStream(name string) *WriteStream {
 	// Is this stream already handed out?
-	if stream, ok := streams[name]; ok {
+	if stream, ok := writeStreams[name]; ok {
 		return stream
 	}
 
@@ -38,12 +47,13 @@ func (s *Service) GetWriteStream(name string) *ServiceStream {
 	for _, output := range s.Outputs {
 		if *output.Name == name {
 			// Create a new stream
-			stream := &ServiceStream{
+			stream := &serviceStream{
 				address:  *output.Address,
 				sockType: zmq4.PUB,
 			}
-			streams[name] = stream
-			return stream
+			res := &WriteStream{stream: *stream}
+			writeStreams[name] = res
+			return res
 		}
 	}
 
@@ -53,10 +63,10 @@ func (s *Service) GetWriteStream(name string) *ServiceStream {
 
 // Get a stream that you can read from (i.e. an input stream).
 // This function panics if the stream does not exist, because fetching a non-existent stream should always terminate to avoid undefined behavior.
-func (s *Service) GetReadStream(service string, name string) *ServiceStream {
+func (s *Service) GetReadStream(service string, name string) *ReadStream {
 	streamName := fmt.Sprintf("%s-%s", service, name)
 	// Is this stream already handed out?
-	if stream, ok := streams[streamName]; ok {
+	if stream, ok := readStreams[streamName]; ok {
 		return stream
 	}
 
@@ -66,12 +76,13 @@ func (s *Service) GetReadStream(service string, name string) *ServiceStream {
 			for _, stream := range input.Streams {
 				if *stream.Name == name {
 					// Create a new stream
-					stream := &ServiceStream{
+					stream := &serviceStream{
 						address:  *stream.Address,
 						sockType: zmq4.SUB,
 					}
-					streams[streamName] = stream
-					return stream
+					res := &ReadStream{stream: *stream}
+					readStreams[streamName] = res
+					return res
 				}
 			}
 		}
@@ -81,30 +92,51 @@ func (s *Service) GetReadStream(service string, name string) *ServiceStream {
 	return nil
 }
 
-// Initial setup of the stream (done lazily, on the first read or write)
-func (s *ServiceStream) init() error {
+// Initial setup of the stream (done lazily, on the first read)
+func (s *ReadStream) init() error {
 	// Already initialized
-	if s.socket != nil {
+	if s.stream.socket != nil {
 		return nil
 	}
 
 	// Create a new socket
-	socket, err := zmq4.NewSocket(s.sockType)
+	socket, err := zmq4.NewSocket(s.stream.sockType)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to create read socket at %s: %w", s.stream.address, err)
 	}
-	err = socket.Connect(s.address)
+	err = socket.Connect(s.stream.address)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to connect read socket to %s: %w", s.stream.address, err)
 	}
-	s.socket = socket
-	s.bytes = 0
+	s.stream.socket = socket
+	s.stream.bytes = 0
+	return nil
+}
+
+// Initial setup of the stream (done lazily, on the first read)
+func (s *WriteStream) init() error {
+	// Already initialized
+	if s.stream.socket != nil {
+		return nil
+	}
+
+	// Create a new socket
+	socket, err := zmq4.NewSocket(s.stream.sockType)
+	if err != nil {
+		return fmt.Errorf("Failed to create write socket at %s: %w", s.stream.address, err)
+	}
+	err = socket.Bind(s.stream.address)
+	if err != nil {
+		return fmt.Errorf("Failed to bind write socket to %s: %w", s.stream.address, err)
+	}
+	s.stream.socket = socket
+	s.stream.bytes = 0
 	return nil
 }
 
 // Write byte data to the stream
-func (s *ServiceStream) WriteBytes(data []byte) error {
-	if s.socket == nil {
+func (s *WriteStream) WriteBytes(data []byte) error {
+	if s.stream.socket == nil {
 		err := s.init()
 		if err != nil {
 			return err
@@ -112,22 +144,22 @@ func (s *ServiceStream) WriteBytes(data []byte) error {
 	}
 
 	// Check if the socket is writable
-	if s.sockType != zmq4.PUB {
+	if s.stream.sockType != zmq4.PUB {
 		return fmt.Errorf("Cannot write to a read-only stream")
 	}
 
 	// Write the data
-	_, err := s.socket.SendBytes(data, 0)
+	_, err := s.stream.socket.SendBytes(data, 0)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to write to stream: %w", err)
 	}
-	s.bytes += len(data)
+	s.stream.bytes += len(data)
 	return nil
 }
 
 // Read byte data from the stream
-func (s *ServiceStream) ReadBytes() ([]byte, error) {
-	if s.socket == nil {
+func (s *ReadStream) ReadBytes() ([]byte, error) {
+	if s.stream.socket == nil {
 		err := s.init()
 		if err != nil {
 			return nil, err
@@ -135,21 +167,21 @@ func (s *ServiceStream) ReadBytes() ([]byte, error) {
 	}
 
 	// Check if the socket is readable
-	if s.sockType != zmq4.SUB {
+	if s.stream.sockType != zmq4.SUB {
 		return nil, fmt.Errorf("Cannot read from a write-only stream")
 	}
 
 	// Read the data
-	data, err := s.socket.RecvBytes(0)
+	data, err := s.stream.socket.RecvBytes(0)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to read from stream: %w", err)
 	}
-	s.bytes += len(data)
+	s.stream.bytes += len(data)
 	return data, nil
 }
 
 // Write a rovercom sensor output message to the stream
-func (s *ServiceStream) Write(output *rovercom.SensorOutput) error {
+func (s *WriteStream) Write(output *rovercom.SensorOutput) error {
 	if output == nil {
 		return fmt.Errorf("Cannot write nil output")
 	}
@@ -166,7 +198,7 @@ func (s *ServiceStream) Write(output *rovercom.SensorOutput) error {
 
 // Read a rovercom sensor output message from the stream
 // (you will need to switch on the returned message type to cast it to the correct type)
-func (s *ServiceStream) Read() (*rovercom.SensorOutput, error) {
+func (s *ReadStream) Read() (*rovercom.SensorOutput, error) {
 	// Read the data
 	buf, err := s.ReadBytes()
 	if err != nil {

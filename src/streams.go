@@ -108,6 +108,10 @@ func (s *ReadStream) init() error {
 	if err != nil {
 		return fmt.Errorf("Failed to connect read socket to %s: %w", s.stream.address, err)
 	}
+	err = socket.SetSubscribe("")
+	if err != nil {
+		return fmt.Errorf("Failed to set subscription on read socket: %w", err)
+	}
 	s.stream.socket = socket
 	s.stream.bytes = 0
 	return nil

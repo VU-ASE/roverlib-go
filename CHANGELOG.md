@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.7](https://github.com/VU-ASE/roverlib-go/compare/v1.1.6...v1.1.7) (2024-12-10)
+
+
+### Bug Fixes
+
+* subscribe to all topics when reading from stream ([71d2233](https://github.com/VU-ASE/roverlib-go/commit/71d22334d64cad573bc746ef1cf79258159b0108))
+
 ## [1.1.6](https://github.com/VU-ASE/roverlib-go/compare/v1.1.5...v1.1.6) (2024-12-10)
 
 

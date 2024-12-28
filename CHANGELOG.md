@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/VU-ASE/roverlib-go/compare/v1.1.7...v1.2.0) (2024-12-28)
+
+
+### Features
+
+* compliant with merged int/float rovervalidate schema ([b4d656e](https://github.com/VU-ASE/roverlib-go/commit/b4d656e841cc4b392ff20458a95e568a3ea18a44))
+
 ## [1.1.7](https://github.com/VU-ASE/roverlib-go/compare/v1.1.6...v1.1.7) (2024-12-10)
 
 

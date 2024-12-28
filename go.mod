@@ -3,7 +3,7 @@ module github.com/VU-ASE/roverlib-go
 go 1.21.6
 
 require (
-	github.com/VU-ASE/rovercom v1.2.1
+	github.com/VU-ASE/rovercom v1.5.1
 	github.com/pebbe/zmq4 v1.2.11
 	github.com/rs/zerolog v1.33.0
 	google.golang.org/protobuf v1.34.2

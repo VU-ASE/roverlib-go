@@ -50,13 +50,13 @@ func injectValidService() {
 		"configuration": [
 			{
 				"name": "max-iterations",
-				"type": "int",
+				"type": "number",
 				"tunable": true,
 				"value": 100
 			},
 			{
 				"name": "speed",
-				"type": "float",
+				"type": "number",
 				"tunable": false,
 				"value": 1.5
 			},
@@ -90,18 +90,18 @@ func TestValidEmptyProgram(t *testing.T) {
 // Test if we can access the configuration values
 func TestValidProgramWithConfigAccess(t *testing.T) {
 	main := func(s roverlib.Service, config *roverlib.ServiceConfiguration) error {
-		// Test integer access
-		i, err := config.GetInt("max-iterations")
+		// Test float access
+		i, err := config.GetFloatSafe("max-iterations")
 		if err != nil {
-			t.Errorf("Failed to get integer configuration value: %s", err)
+			t.Errorf("Failed to get number configuration value: %s", err)
 		}
-		fmt.Printf("max-iterations: %d\n", i)
-		// Test SAFE integer access
-		i, err = config.GetIntSafe("max-iterations")
+		fmt.Printf("max-iterations: %f\n", i)
+		// Test SAFE float access
+		i, err = config.GetFloatSafe("max-iterations")
 		if err != nil {
-			t.Errorf("Failed to get integer configuration value: %s", err)
+			t.Errorf("Failed to get number configuration value: %s", err)
 		}
-		fmt.Printf("max-iterations: %d\n", i)
+		fmt.Printf("max-iterations: %f\n", i)
 
 		return nil
 	}

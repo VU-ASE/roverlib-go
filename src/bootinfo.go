@@ -44,7 +44,7 @@ type Configuration struct {
 	Tunable *bool `json:"tunable,omitempty"`
 	// The type of this configuration option
 	Type *Type `json:"type,omitempty"`
-	// The value of this configuration option, which can be a string, integer, or float
+	// The value of this configuration option, which can be a string or float
 	Value *Value `json:"value"`
 }
 
@@ -79,31 +79,26 @@ type Tuning struct {
 type Type string
 
 const (
-	Float  Type = "float"
-	Int    Type = "int"
+	Number Type = "number"
 	String Type = "string"
 )
 
-// The value of this configuration option, which can be a string, integer, or float
+// The value of this configuration option, which can be a string or float
 type Value struct {
-	Double  *float64
-	Integer *int64
-	String  *string
+	Double *float64
+	String *string
 }
 
 func (x *Value) UnmarshalJSON(data []byte) error {
-	object, err := unmarshalUnion(data, &x.Integer, &x.Double, nil, &x.String, false, nil, false, nil, false, nil, false, nil, false)
+	_, err := unmarshalUnion(data, nil, &x.Double, nil, &x.String, false, nil, false, nil, false, nil, false, nil, false)
 	if err != nil {
 		return err
-	}
-	if object {
-		return nil
 	}
 	return nil
 }
 
 func (x *Value) MarshalJSON() ([]byte, error) {
-	return marshalUnion(x.Integer, x.Double, nil, x.String, false, nil, false, nil, false, nil, false, nil, false)
+	return marshalUnion(nil, x.Double, nil, x.String, false, nil, false, nil, false, nil, false, nil, false)
 }
 
 func unmarshalUnion(data []byte, pi **int64, pf **float64, pb **bool, ps **string, haveArray bool, pa interface{}, haveObject bool, pc interface{}, haveMap bool, pm interface{}, haveEnum bool, pe interface{}, nullable bool) (bool, error) {

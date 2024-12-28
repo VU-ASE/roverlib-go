@@ -158,10 +158,8 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 				// Update the configuration (setX will ignore values that are not tunable)
 				for _, p := range tuning.DynamicParameters {
 					// This is certainly not pretty, but unions are not straightforward in Go
-					if p.GetInt() != nil {
-						configuration.setInt(p.GetInt().Key, int(p.GetInt().Value))
-					} else if p.GetFloat() != nil {
-						configuration.setFloat(p.GetFloat().Key, float64(p.GetFloat().Value))
+					if p.GetNumber() != nil {
+						configuration.setFloat(p.GetNumber().Key, float64(p.GetNumber().Value))
 					} else if p.GetString_() != nil {
 						configuration.setString(p.GetString_().Key, p.GetString_().Value)
 					} else {

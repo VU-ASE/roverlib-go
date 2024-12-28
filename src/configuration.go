@@ -13,7 +13,6 @@ import (
 
 type ServiceConfiguration struct {
 	// Managed per type, because Go does not support easy union types
-	intOptions    map[string]int
 	floatOptions  map[string]float64
 	stringOptions map[string]string
 	tunable       map[string]bool
@@ -25,7 +24,6 @@ type ServiceConfiguration struct {
 
 func NewServiceConfiguration(service Service) *ServiceConfiguration {
 	config := &ServiceConfiguration{
-		intOptions:    make(map[string]int),
 		floatOptions:  make(map[string]float64),
 		stringOptions: make(map[string]string),
 		tunable:       make(map[string]bool),
@@ -35,9 +33,7 @@ func NewServiceConfiguration(service Service) *ServiceConfiguration {
 
 	for _, c := range service.Configuration {
 		switch *c.Type {
-		case Int:
-			config.intOptions[*c.Name] = int(*c.Value.Integer)
-		case Float:
+		case Number:
 			config.floatOptions[*c.Name] = *c.Value.Double
 		case String:
 			config.stringOptions[*c.Name] = *c.Value.String
@@ -54,24 +50,6 @@ func NewServiceConfiguration(service Service) *ServiceConfiguration {
 // Methods accessible by the user program
 // nb: we force the user to be very explicit about the type of the configuration value they want to fetch, to avoid runtime errors
 //
-
-// Returns the integer value of the configuration option with the given name, returns an error if the option does not exist or does not exist for this type
-// Reading is NOT thread-safe, but we accept the risks because we assume that the user program will read the configuration values repeatedly
-// If you want to read the configuration values concurrently, you should use the GetIntSafe method
-func (c *ServiceConfiguration) GetInt(name string) (int, error) {
-	value, ok := c.intOptions[name]
-	if !ok {
-		return 0, fmt.Errorf("no integer configuration option with name %s", name)
-	}
-	return value, nil
-}
-
-func (c *ServiceConfiguration) GetIntSafe(name string) (int, error) {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-
-	return c.GetInt(name)
-}
 
 // Returns the float value of the configuration option with the given name, returns an error if the option does not exist or does not exist for this type
 // Reading is NOT thread-safe, but we accept the risks because we assume that the user program will read the configuration values repeatedly
@@ -112,19 +90,6 @@ func (c *ServiceConfiguration) GetStringSafe(name string) (string, error) {
 //
 // Methods for internal use
 //
-
-// Set the integer value of the configuration option with the given name (thread-safe)
-func (c *ServiceConfiguration) setInt(name string, value int) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	if c.tunable[name] {
-		c.intOptions[name] = value
-		log.Debug().Str("name", name).Int("value", value).Msg("Set integer configuration option")
-	} else {
-		log.Debug().Str("name", name).Msg("Attempted to set non-tunable integer configuration option")
-	}
-}
 
 // Set the float value of the configuration option with the given name (thread-safe)
 func (c *ServiceConfiguration) setFloat(name string, value float64) {

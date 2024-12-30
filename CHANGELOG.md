@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/VU-ASE/roverlib-go/compare/v1.2.3...v1.2.4) (2024-12-30)
+
+
+### Bug Fixes
+
+* keep retrying tuning subscription ([3dec11d](https://github.com/VU-ASE/roverlib-go/commit/3dec11d74cc9a599754b5c87fc12a03711334edf))
+
 ## [1.2.3](https://github.com/VU-ASE/roverlib-go/compare/v1.2.2...v1.2.3) (2024-12-30)
 
 

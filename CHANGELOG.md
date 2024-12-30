@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.6](https://github.com/VU-ASE/roverlib-go/compare/v1.2.5...v1.2.6) (2024-12-30)
+
+
+### Bug Fixes
+
+* use subscribe socket for tuning, instead of request socket ([93c27d1](https://github.com/VU-ASE/roverlib-go/commit/93c27d1d4e4275b0b2aa61a3f28bb4e33f3f70d3))
+
 ## [1.2.5](https://github.com/VU-ASE/roverlib-go/compare/v1.2.4...v1.2.5) (2024-12-30)
 
 

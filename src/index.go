@@ -121,6 +121,7 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 	if *service.Tuning.Enabled {
 		go func() {
 			for {
+				log.Info().Msgf("Attempting to subscribe to OTA tuning service at %s", *service.Tuning.Address)
 				// Initialize zmq socket to retrieve OTA tuning values from the service responsible for this
 				socket, err := zmq4.NewSocket(zmq4.REQ)
 				if err != nil {

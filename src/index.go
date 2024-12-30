@@ -120,62 +120,64 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 	// (the user program can fetch the latest value from the configuration)
 	if *service.Tuning.Enabled {
 		go func() {
-			// Initialize zmq socket to retrieve OTA tuning values from the service responsible for this
-			socket, err := zmq4.NewSocket(zmq4.REQ)
-			if err != nil {
-				log.Err(err).Msg("Failed to create socket for OTA tuning")
-				return
-			}
-			defer socket.Close()
-
-			err = socket.Connect(*service.Tuning.Address)
-			if err != nil {
-				log.Err(err).Msg("Failed to connect to OTA tuning service")
-				return
-			}
-
-			// Subscribe to all messages
-			err = socket.SetSubscribe("")
-			if err != nil {
-				log.Err(err).Msg("Failed to send subscribe message")
-				return
-			}
-
 			for {
-				log.Info().Msg("Waiting for new tuning values")
-				// Receive new configuration, and update this in the shared configuration
-				res, err := socket.Recv(0)
+				// Initialize zmq socket to retrieve OTA tuning values from the service responsible for this
+				socket, err := zmq4.NewSocket(zmq4.REQ)
 				if err != nil {
-					log.Err(err).Msg("Failed to receive tuning values")
+					log.Err(err).Msg("Failed to create socket for OTA tuning")
 					continue
 				}
-				log.Info().Msg("Received new tuning values")
-
-				// Convert from over-the-wire format to Go struct, using protobuf
-				var tuning rovercom.TuningState
-				err = proto.Unmarshal([]byte(res), &tuning)
+				err = socket.Connect(*service.Tuning.Address)
 				if err != nil {
-					log.Err(err).Msg("Failed to unmarshal tuning values")
+					log.Err(err).Msg("Failed to connect to OTA tuning service")
+					socket.Close()
 					continue
 				}
 
-				// Is the timestamp later than the last update?
-				if tuning.Timestamp <= configuration.lastUpdate {
-					log.Info().Msg("Received new tuning values with an outdated timestamp, ignoring...")
+				// Subscribe to all messages
+				err = socket.SetSubscribe("")
+				if err != nil {
+					log.Err(err).Msg("Failed to send subscribe message")
+					socket.Close()
 					continue
 				}
 
-				// Update the configuration (setX will ignore values that are not tunable)
-				for _, p := range tuning.DynamicParameters {
-					// This is certainly not pretty, but unions are not straightforward in Go
-					if p.GetNumber() != nil {
-						log.Info().Float32("key", p.GetNumber().Value).Msg("Setting tuning value")
-						configuration.setFloat(p.GetNumber().Key, float64(p.GetNumber().Value))
-					} else if p.GetString_() != nil {
-						log.Info().Str("key", p.GetString_().Value).Msg("Setting tuning value")
-						configuration.setString(p.GetString_().Key, p.GetString_().Value)
-					} else {
-						log.Warn().Msg("Unknown tuning value type")
+				for {
+					log.Info().Msg("Waiting for new tuning values")
+					// Receive new configuration, and update this in the shared configuration
+					res, err := socket.Recv(0)
+					if err != nil {
+						log.Err(err).Msg("Failed to receive tuning values")
+						continue
+					}
+					log.Info().Msg("Received new tuning values")
+
+					// Convert from over-the-wire format to Go struct, using protobuf
+					var tuning rovercom.TuningState
+					err = proto.Unmarshal([]byte(res), &tuning)
+					if err != nil {
+						log.Err(err).Msg("Failed to unmarshal tuning values")
+						continue
+					}
+
+					// Is the timestamp later than the last update?
+					if tuning.Timestamp <= configuration.lastUpdate {
+						log.Info().Msg("Received new tuning values with an outdated timestamp, ignoring...")
+						continue
+					}
+
+					// Update the configuration (setX will ignore values that are not tunable)
+					for _, p := range tuning.DynamicParameters {
+						// This is certainly not pretty, but unions are not straightforward in Go
+						if p.GetNumber() != nil {
+							log.Info().Float32("key", p.GetNumber().Value).Msg("Setting tuning value")
+							configuration.setFloat(p.GetNumber().Key, float64(p.GetNumber().Value))
+						} else if p.GetString_() != nil {
+							log.Info().Str("key", p.GetString_().Value).Msg("Setting tuning value")
+							configuration.setString(p.GetString_().Key, p.GetString_().Value)
+						} else {
+							log.Warn().Msg("Unknown tuning value type")
+						}
 					}
 				}
 			}

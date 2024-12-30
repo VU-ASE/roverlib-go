@@ -8,6 +8,7 @@ package roverlib
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	rovercom "github.com/VU-ASE/rovercom/packages/go/outputs"
 	"github.com/pebbe/zmq4"
@@ -46,9 +47,12 @@ func (s *Service) GetWriteStream(name string) *WriteStream {
 	// Does this stream exist?
 	for _, output := range s.Outputs {
 		if *output.Name == name {
+			// ZMQ wants to bind write streams to tcp://*:port addresses, so if roverd gave us a localhost, we need to change it to *
+			address := strings.Replace(*output.Address, "localhost", "*", 1)
+
 			// Create a new stream
 			stream := &serviceStream{
-				address:  *output.Address,
+				address:  address,
 				sockType: zmq4.PUB,
 			}
 			res := &WriteStream{stream: *stream}

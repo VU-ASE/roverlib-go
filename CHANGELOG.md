@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/VU-ASE/roverlib-go/compare/v1.2.2...v1.2.3) (2024-12-30)
+
+
+### Bug Fixes
+
+* more explicit tuning logs ([2047e36](https://github.com/VU-ASE/roverlib-go/commit/2047e36543c0157a1b26a37e3f7814ef5fa4e169))
+
 ## [1.2.2](https://github.com/VU-ASE/roverlib-go/compare/v1.2.1...v1.2.2) (2024-12-30)
 
 

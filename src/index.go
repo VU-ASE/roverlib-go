@@ -123,7 +123,7 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 			for {
 				log.Info().Msgf("Attempting to subscribe to OTA tuning service at %s", *service.Tuning.Address)
 				// Initialize zmq socket to retrieve OTA tuning values from the service responsible for this
-				socket, err := zmq4.NewSocket(zmq4.REQ)
+				socket, err := zmq4.NewSocket(zmq4.SUB)
 				if err != nil {
 					log.Err(err).Msg("Failed to create socket for OTA tuning")
 					continue

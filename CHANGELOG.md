@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.5](https://github.com/VU-ASE/roverlib-go/compare/v1.2.4...v1.2.5) (2024-12-30)
+
+
+### Bug Fixes
+
+* show tuning address ([5187547](https://github.com/VU-ASE/roverlib-go/commit/5187547785947780c26a51907d2d34532e9ba960))
+
 ## [1.2.4](https://github.com/VU-ASE/roverlib-go/compare/v1.2.3...v1.2.4) (2024-12-30)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/VU-ASE/roverlib-go/compare/v1.2.0...v1.2.1) (2024-12-30)
+
+
+### Bug Fixes
+
+* set correct subscribe value for tuning receiver socket ([49ef9bd](https://github.com/VU-ASE/roverlib-go/commit/49ef9bd7171ad2efbe4b47236aa3d52f73058c9a))
+
 ## [1.2.0](https://github.com/VU-ASE/roverlib-go/compare/v1.1.7...v1.2.0) (2024-12-28)
 
 

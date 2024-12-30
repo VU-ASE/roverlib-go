@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/VU-ASE/roverlib-go/compare/v1.2.1...v1.2.2) (2024-12-30)
+
+
+### Bug Fixes
+
+* replace localhost with * for write streams ([af4e1e2](https://github.com/VU-ASE/roverlib-go/commit/af4e1e2f44af8123b698fc93f4eb0567913e27ab))
+
 ## [1.2.1](https://github.com/VU-ASE/roverlib-go/compare/v1.2.0...v1.2.1) (2024-12-30)
 
 

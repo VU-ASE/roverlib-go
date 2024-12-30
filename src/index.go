@@ -133,6 +133,14 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 				log.Err(err).Msg("Failed to connect to OTA tuning service")
 				return
 			}
+
+			// Subscribe to all messages
+			err = socket.SetSubscribe("")
+			if err != nil {
+				log.Err(err).Msg("Failed to send subscribe message")
+				return
+			}
+
 			for {
 				// Receive new configuration, and update this in the shared configuration
 				res, err := socket.Recv(0)

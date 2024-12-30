@@ -142,12 +142,14 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 			}
 
 			for {
+				log.Info().Msg("Waiting for new tuning values")
 				// Receive new configuration, and update this in the shared configuration
 				res, err := socket.Recv(0)
 				if err != nil {
 					log.Err(err).Msg("Failed to receive tuning values")
 					continue
 				}
+				log.Info().Msg("Received new tuning values")
 
 				// Convert from over-the-wire format to Go struct, using protobuf
 				var tuning rovercom.TuningState
@@ -159,7 +161,7 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 
 				// Is the timestamp later than the last update?
 				if tuning.Timestamp <= configuration.lastUpdate {
-					log.Debug().Msg("No new tuning values")
+					log.Info().Msg("Received new tuning values with an outdated timestamp, ignoring...")
 					continue
 				}
 
@@ -167,14 +169,15 @@ func Run(main MainCallback, onTerminate TerminationCallback) {
 				for _, p := range tuning.DynamicParameters {
 					// This is certainly not pretty, but unions are not straightforward in Go
 					if p.GetNumber() != nil {
+						log.Info().Float32("key", p.GetNumber().Value).Msg("Setting tuning value")
 						configuration.setFloat(p.GetNumber().Key, float64(p.GetNumber().Value))
 					} else if p.GetString_() != nil {
+						log.Info().Str("key", p.GetString_().Value).Msg("Setting tuning value")
 						configuration.setString(p.GetString_().Key, p.GetString_().Value)
 					} else {
 						log.Warn().Msg("Unknown tuning value type")
 					}
 				}
-
 			}
 		}()
 	}

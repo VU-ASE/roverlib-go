@@ -9,4 +9,4 @@ go get github.com/VU-ASE/roverlib-go
 go get github.com/VU-ASE/roverlib-go@v1.2.6
 ```
 
-Using the same commands, you can update or downgrade `roverlib-go` in-place in your Go module.
+Using the same commands, you can update or downgrade `roverlib-go` in-place in your Go module. All available versions that can be installed can be found [here](https://github.com/VU-ASE/roverlib-go/releases).

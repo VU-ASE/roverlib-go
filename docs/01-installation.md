@@ -1,5 +1,11 @@
 # Installation
 
+:::info[Recommended approach]
+
+It is not recommended to install this library manually. Instead, you can initialize a Go service using `roverctl` using [this command](https://ase.vu.nl/docs/framework/Software/rover/roverctl/usage/#initialize-a-service).
+
+:::
+
 The `roverlib-go` library can be installed using `go get` in any Go module as follows:
 
 ```bash

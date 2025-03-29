@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.7](https://github.com/VU-ASE/roverlib-go/compare/v1.2.6...v1.2.7) (2025-03-29)
+
+
+### Bug Fixes
+
+* updated rovercom dependency ([d37948a](https://github.com/VU-ASE/roverlib-go/commit/d37948ad1241c1bc8572e655a49de20a4190a064))
+
 ## [1.2.6](https://github.com/VU-ASE/roverlib-go/compare/v1.2.5...v1.2.6) (2024-12-30)
 
 

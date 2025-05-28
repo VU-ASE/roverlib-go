@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.8](https://github.com/VU-ASE/roverlib-go/compare/v1.2.7...v1.2.8) (2025-05-28)
+
+
+### Bug Fixes
+
+* removed log.Fatal in getReadStream and getWriteStream ([97943c8](https://github.com/VU-ASE/roverlib-go/commit/97943c8359ef29205a4f3860732ac0677cb5aeeb))
+
 ## [1.2.7](https://github.com/VU-ASE/roverlib-go/compare/v1.2.6...v1.2.7) (2025-03-29)
 
 

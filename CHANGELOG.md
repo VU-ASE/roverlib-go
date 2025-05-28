@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.9](https://github.com/VU-ASE/roverlib-go/compare/v1.2.8...v1.2.9) (2025-05-28)
+
+
+### Bug Fixes
+
+* removed the sockType form the struct ([3d69047](https://github.com/VU-ASE/roverlib-go/commit/3d690478531db0f60b7cad1feffe4a19b59a72dd))
+
 ## [1.2.8](https://github.com/VU-ASE/roverlib-go/compare/v1.2.7...v1.2.8) (2025-05-28)
 
 

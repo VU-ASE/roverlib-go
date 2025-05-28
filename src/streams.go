@@ -23,7 +23,6 @@ type serviceStream struct {
 	// The socket that this stream is connected to
 	address  string       // zmq address
 	socket   *zmq4.Socket // can be nil, when lazy loading
-	sockType zmq4.Type
 	// Amount of bytes read/written so far
 	bytes int
 }
@@ -53,7 +52,6 @@ func (s *Service) GetWriteStream(name string) *WriteStream {
 			// Create a new stream
 			stream := &serviceStream{
 				address:  address,
-				sockType: zmq4.PUB,
 			}
 			res := &WriteStream{stream: *stream}
 			writeStreams[name] = res
@@ -82,7 +80,6 @@ func (s *Service) GetReadStream(service string, name string) *ReadStream {
 					// Create a new stream
 					stream := &serviceStream{
 						address:  *stream.Address,
-						sockType: zmq4.SUB,
 					}
 					res := &ReadStream{stream: *stream}
 					readStreams[streamName] = res
@@ -104,7 +101,7 @@ func (s *ReadStream) init() error {
 	}
 
 	// Create a new socket
-	socket, err := zmq4.NewSocket(s.stream.sockType)
+	socket, err := zmq4.NewSocket(zmq4.SUB)
 	if err != nil {
 		return fmt.Errorf("Failed to create read socket at %s: %w", s.stream.address, err)
 	}
@@ -129,7 +126,7 @@ func (s *WriteStream) init() error {
 	}
 
 	// Create a new socket
-	socket, err := zmq4.NewSocket(s.stream.sockType)
+	socket, err := zmq4.NewSocket(zmq4.PUB)
 	if err != nil {
 		return fmt.Errorf("Failed to create write socket at %s: %w", s.stream.address, err)
 	}
@@ -151,11 +148,6 @@ func (s *WriteStream) WriteBytes(data []byte) error {
 		}
 	}
 
-	// Check if the socket is writable
-	if s.stream.sockType != zmq4.PUB {
-		return fmt.Errorf("Cannot write to a read-only stream")
-	}
-
 	// Write the data
 	_, err := s.stream.socket.SendBytes(data, 0)
 	if err != nil {
@@ -172,11 +164,6 @@ func (s *ReadStream) ReadBytes() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	// Check if the socket is readable
-	if s.stream.sockType != zmq4.SUB {
-		return nil, fmt.Errorf("Cannot read from a write-only stream")
 	}
 
 	// Read the data

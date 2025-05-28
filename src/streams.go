@@ -7,11 +7,11 @@ package roverlib
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	rovercom "github.com/VU-ASE/rovercom/packages/go/outputs"
 	"github.com/pebbe/zmq4"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -61,7 +61,7 @@ func (s *Service) GetWriteStream(name string) *WriteStream {
 		}
 	}
 
-	log.Fatalf("Output stream %s does not exist. Update your program code or service.yaml", name)
+	log.Error().Msgf("Output stream %s does not exist. Update your program code or service.yaml", name)
 	return nil
 }
 
@@ -92,7 +92,7 @@ func (s *Service) GetReadStream(service string, name string) *ReadStream {
 		}
 	}
 
-	log.Fatalf("Input stream %s does not exist. Update your program code or service.yaml", streamName)
+	log.Error().Msgf("Input stream %s does not exist. Update your program code or service.yaml", streamName)
 	return nil
 }
 

@@ -19,11 +19,11 @@ func injectValidService() {
 				"service": "imaging",
 				"streams": [
 					{
-						"name": "track_data",
+						"name": "track-data",
 						"address": "tcp://unix:7890"
 					},
 					{
-						"name": "debug_info",
+						"name": "debug-info",
 						"address": "tcp://unix:7891"
 					}
 				]
@@ -32,7 +32,7 @@ func injectValidService() {
 				"service": "navigation",
 				"streams": [
 					{
-						"name": "location_data",
+						"name": "location-data",
 						"address": "tcp://unix:7892"
 					}
 				]
@@ -40,11 +40,11 @@ func injectValidService() {
 		],
 		"outputs": [
 			{
-				"name": "motor_movement",
+				"name": "motor-movement",
 				"address": "tcp://unix:7882"
 			},
 			{
-				"name": "sensor_data",
+				"name": "sensor-data",
 				"address": "tcp://unix:7883"
 			}
 		],
@@ -112,7 +112,7 @@ func injectInvalidService(variant string) {
 	case "missing-input-service":
 		os.Setenv("ASE_SERVICE", `{
 			"name": "controller", "version": "1.0.1",
-			"inputs": [{"service": "", "streams": [{"name": "track_data", "address": "tcp://unix:7890"}]}],
+			"inputs": [{"service": "", "streams": [{"name": "track-data", "address": "tcp://unix:7890"}]}],
 			"outputs": [], "configuration": [], "tuning": {}
 		  }`)
 	case "missing-output-name":
@@ -126,7 +126,7 @@ func injectInvalidService(variant string) {
 		os.Setenv("ASE_SERVICE", `{
 			"name": "controller", "version": "1.0.1",
 			"inputs": [],
-			"outputs": [{"name": "motor_movement", "address": ""}],
+			"outputs": [{"name": "motor-movement", "address": ""}],
 			"configuration": [], "tuning": {}
 		  }`)
 	case "non-boolean":
@@ -266,14 +266,14 @@ func TestValidProgramWithServiceAccess(t *testing.T) {
 	// Create a structure for the expected inputs and outputs
 	// and compare them with the ones we got from the service
 	wantInputs := []inputDefinition{
-		{"imaging", "track_data", "tcp://unix:7890"},
-		{"imaging", "debug_info", "tcp://unix:7891"},
-		{"navigation", "location_data", "tcp://unix:7892"},
+		{"imaging", "track-data", "tcp://unix:7890"},
+		{"imaging", "debug-info", "tcp://unix:7891"},
+		{"navigation", "location-data", "tcp://unix:7892"},
 	}
 
 	wantOutputs := []outputDefinition{
-		{"motor_movement", "tcp://unix:7882"},
-		{"sensor_data", "tcp://unix:7883"},
+		{"motor-movement", "tcp://unix:7882"},
+		{"sensor-data", "tcp://unix:7883"},
 	}
 
 	if !reflect.DeepEqual(gotInputs, wantInputs) {

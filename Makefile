@@ -17,3 +17,4 @@ clean:
 
 test: lint
 	go test ./src -v -count=1 -timeout 0
+

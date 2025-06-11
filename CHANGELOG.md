@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.0](https://github.com/VU-ASE/roverlib-go/compare/v1.2.8...v1.3.0) (2025-06-11)
+
+
+### Features
+
+* added assertion checks and invalid bootspec checks ([9e943c0](https://github.com/VU-ASE/roverlib-go/commit/9e943c098610cf4621c82fa47ad9723faede7dc8))
+* added configuration_test file ([f8e642c](https://github.com/VU-ASE/roverlib-go/commit/f8e642ce774576101fbf132b6b76f5cd2a73f10b))
+* added streams_test file ([694807d](https://github.com/VU-ASE/roverlib-go/commit/694807d8c1d21bd64921e301985344b7ada4f4c5))
+
+
+### Bug Fixes
+
+* prevent eternal "expected" tests with reused action ([d161ee0](https://github.com/VU-ASE/roverlib-go/commit/d161ee037681d4f74d325f9f48c2dc6f97c42c6f))
+* release-please PR eternally expected ([9afeed2](https://github.com/VU-ASE/roverlib-go/commit/9afeed24df1847cee2ef7141099d340a08d692d3))
+* release-please PR eternally expected ([636cd6c](https://github.com/VU-ASE/roverlib-go/commit/636cd6c21b8572b08ac5a8e0e294edb7a2dc31ab))
+* removed the sockType form the struct ([3d69047](https://github.com/VU-ASE/roverlib-go/commit/3d690478531db0f60b7cad1feffe4a19b59a72dd))
+
 ## [1.2.8](https://github.com/VU-ASE/roverlib-go/compare/v1.2.7...v1.2.8) (2025-05-28)
 
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/VU-ASE/roverlib-go/compare/v1.3.0...v1.3.1) (2025-06-18)
+
+
+### Bug Fixes
+
+* added unit test for undefined behavior ([1b99801](https://github.com/VU-ASE/roverlib-go/commit/1b99801b3eb0c23b2aa596c296b047459c531211))
+* do not segfault on unset name in automated tests ([71b5075](https://github.com/VU-ASE/roverlib-go/commit/71b50758452b60f2f1f4459c9552d9e81e1157ab))
+
 ## [1.3.0](https://github.com/VU-ASE/roverlib-go/compare/v1.2.8...v1.3.0) (2025-06-11)
 
 

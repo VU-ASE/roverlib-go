@@ -26,9 +26,17 @@ func setupLogging(debug bool, outputPath string, service Service) {
 	// Set up custom caller prefix
 	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
 		path := strings.Split(file, "/")
+
+		// Sometimes during unit tests, the service name is not set,
+		// causing a segfault. This is a workaround for that
+		name := "unknown"
+		if service.Name != nil {
+			name = *service.Name
+		}
+
 		// only take the last three elements of the path
 		filepath := strings.Join(path[len(path)-3:], "/")
-		return fmt.Sprintf("[%s] %s:%d", *service.Name, filepath, line)
+		return fmt.Sprintf("[%s] %s:%d", name, filepath, line)
 	}
 	outputWriter := zerolog.ConsoleWriter{Out: os.Stderr}
 	log.Logger = log.Output(outputWriter).With().Caller().Logger()

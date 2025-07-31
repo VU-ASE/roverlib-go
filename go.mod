@@ -1,4 +1,4 @@
-module github.com/VU-ASE/roverlib-go
+module github.com/VU-ASE/roverlib-go/v2
 
 go 1.21.6
 

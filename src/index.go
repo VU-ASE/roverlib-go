@@ -10,7 +10,7 @@ import (
 
 	build_debug "runtime/debug"
 
-	rovercom "github.com/VU-ASE/rovercom/packages/go/tuning"
+	rovercom "github.com/VU-ASE/rovercom/v2/packages/go/tuning"
 	"github.com/pebbe/zmq4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

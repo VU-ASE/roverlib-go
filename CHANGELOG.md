@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.0](https://github.com/VU-ASE/roverlib-go/compare/v1.3.0...v2.0.0) (2025-07-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* update rovercom to v2
+
+### Features
+
+* update rovercom to v2 ([c372798](https://github.com/VU-ASE/roverlib-go/commit/c372798a7e888e3705e2c433155728433b0dd4a3))
+
+
+### Bug Fixes
+
+* added unit test for undefined behavior ([1b99801](https://github.com/VU-ASE/roverlib-go/commit/1b99801b3eb0c23b2aa596c296b047459c531211))
+* broken exports because of upgrade to v2 ([f8d0dbe](https://github.com/VU-ASE/roverlib-go/commit/f8d0dbe4ae7bb1566b47f61aa90d20290689dde0))
+* do not segfault on unset name in automated tests ([71b5075](https://github.com/VU-ASE/roverlib-go/commit/71b50758452b60f2f1f4459c9552d9e81e1157ab))
+* re-export roverlib-go as roverlib-go/v2 ([98ca2af](https://github.com/VU-ASE/roverlib-go/commit/98ca2af1b5e2dffc7dc8276c6a29874789b4074c))
+
 ## [1.3.0](https://github.com/VU-ASE/roverlib-go/compare/v1.2.8...v1.3.0) (2025-06-11)
 
 

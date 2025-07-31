@@ -3,10 +3,10 @@ package roverlib_test
 import (
 	"fmt"
 	"os"
-	"testing"
 	"reflect"
+	"testing"
 
-	roverlib "github.com/VU-ASE/roverlib-go/src"
+	roverlib "github.com/VU-ASE/roverlib-go/v2/src"
 )
 
 // Valid service to test with
@@ -177,7 +177,7 @@ func TestValidProgramWithConfigAccess(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed to get number configuration value: %s", err)
 		}
-		
+
 		fmt.Printf("max-iterations: %f\n", i)
 		// Test SAFE float access and save the values to be asserted later
 		i, err = config.GetFloatSafe("max-iterations")
@@ -227,8 +227,8 @@ func TestValidProgramWithConfigAccess(t *testing.T) {
 // Test and access all service values
 func TestValidProgramWithServiceAccess(t *testing.T) {
 	// Define the expected input and output structures
-	type inputDefinition struct { sercie, name, address string }
-	type outputDefinition struct { name, address string }
+	type inputDefinition struct{ sercie, name, address string }
+	type outputDefinition struct{ name, address string }
 	// Define arrays for the inputs and outputs we will get from the service
 	var gotInputs []inputDefinition
 	var gotOutputs []outputDefinition
@@ -239,8 +239,8 @@ func TestValidProgramWithServiceAccess(t *testing.T) {
 		for _, input := range s.Inputs {
 			for _, stream := range input.Streams {
 				gotInputs = append(gotInputs, inputDefinition{
-					sercie: *input.Service,
-					name:   *stream.Name,
+					sercie:  *input.Service,
+					name:    *stream.Name,
 					address: *stream.Address,
 				})
 			}
@@ -288,8 +288,6 @@ func TestValidProgramWithServiceAccess(t *testing.T) {
 	}
 }
 
-
-
 // TESTING INVALID BOOTSPEC
 
 // Test all but 1 of the invalid bootspecs, If Run panics then the test passes
@@ -319,7 +317,7 @@ func TestInvalidProgram(t *testing.T) {
 
 	main := func(s roverlib.Service, config *roverlib.ServiceConfiguration) error {
 		fmt.Printf("Stated as service %s version %s\n", *s.Name, *s.Version)
-		
+
 		return nil
 	}
 	onTerminate := func(s os.Signal) error {
@@ -333,13 +331,13 @@ func TestInvalidProgram(t *testing.T) {
 			t.Logf("Testing invalid bootspec: %q\n", bootspec)
 
 			defer func() {
-				if r:= recover(); r == nil {
+				if r := recover(); r == nil {
 					t.Fatalf("expected Run to panic, but it did not: %v", r)
-				}	
+				}
 			}()
 			injectInvalidService(bootspec)
 			roverlib.Run(main, onTerminate)
-		
+
 		})
 	}
 
@@ -347,7 +345,7 @@ func TestInvalidProgram(t *testing.T) {
 
 func TestInvalidConfigType(t *testing.T) {
 	injectInvalidService("invalid-config-number")
-	
+
 	// testing with Unmarshal and GetFloat whether they will fail for an invalid type in the configuration
 	service, err := roverlib.UnmarshalService([]byte(os.Getenv("ASE_SERVICE")))
 	if err != nil {

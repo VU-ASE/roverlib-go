@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	rovercom "github.com/VU-ASE/rovercom/packages/go/outputs"
+	rovercom "github.com/VU-ASE/rovercom/v2/packages/go/outputs"
 	"github.com/pebbe/zmq4"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -21,8 +21,8 @@ var readStreams = make(map[string]*ReadStream)
 
 type serviceStream struct {
 	// The socket that this stream is connected to
-	address  string       // zmq address
-	socket   *zmq4.Socket // can be nil, when lazy loading
+	address string       // zmq address
+	socket  *zmq4.Socket // can be nil, when lazy loading
 	// Amount of bytes read/written so far
 	bytes int
 }
@@ -51,7 +51,7 @@ func (s *Service) GetWriteStream(name string) *WriteStream {
 
 			// Create a new stream
 			stream := &serviceStream{
-				address:  address,
+				address: address,
 			}
 			res := &WriteStream{stream: *stream}
 			writeStreams[name] = res
@@ -79,7 +79,7 @@ func (s *Service) GetReadStream(service string, name string) *ReadStream {
 				if *stream.Name == name {
 					// Create a new stream
 					stream := &serviceStream{
-						address:  *stream.Address,
+						address: *stream.Address,
 					}
 					res := &ReadStream{stream: *stream}
 					readStreams[streamName] = res
